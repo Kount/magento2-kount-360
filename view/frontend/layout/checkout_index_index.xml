@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright (c) 2024 KOUNT, INC.
+ * See COPYING.txt for license details.
+ */
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <attribute name="class" value="kaxsdc"/>
+        <attribute name="data-event" value="load"/>
+        <referenceContainer name="content">
+            <block class="Kount\Kount360\Block\Checkout\DataCollector" name="kount.datacollector" template="Kount_Kount360::checkout/datacollector.phtml" cacheable="false"/>
+        </referenceContainer>
+    </body>
+</page>

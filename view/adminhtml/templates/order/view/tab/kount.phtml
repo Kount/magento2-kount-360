@@ -1,0 +1,86 @@
+<?php
+/**
+ * Copyright (c) 2024 KOUNT, INC.
+ * See COPYING.txt for license details.
+ */
+
+/** @var $block \Kount\Kount360\Block\Adminhtml\Order\View\Tab\Kount */
+?>
+<div class="entry-edit">
+    <div class="entry-edit-head">
+        <h4><?= __($block->escapeHtml('Kount')) ?></h4>
+    </div>
+    <div class="fieldset fieldset-wide">
+        <div class="fieldset">
+            <table cellspacing="0" class="form-list admin__table-primary">
+                <tr>
+                    <td class="label">
+                        <label><?= __($block->escapeHtml('Score')) ?></label>
+                        <p><i><?= __($block->escapeHtml('Higher indicates less risk'))?></i></p>
+                    </td>
+                    <td class="value"><strong><?= $block->escapeHtml($block->getOmniscore()) ?></strong></td>
+                </tr>
+                <tr>
+                    <td class="label"><label><?= __($block->escapeHtml('Decision Status')) ?></label></td>
+                    <td class="value"><strong><?= $block->escapeHtml($block->getRisResponse()) ?></strong></td>
+                </tr>
+                <tr>
+                    <td class="label"><label><?= __($block->escapeHtml('Rules Triggered')) ?></label></td>
+                    <td class="value"><strong><?= nl2br($block->getRisRules()) ?></strong></td>
+                </tr>
+                <tr>
+                    <td class="label"><label><?= __($block->escapeHtml('Transaction ID (TRAN)')) ?></label></td>
+                    <td class="value">
+                        <?php if ($block->getRisTransactionId()): ?>
+                            <strong><a href="<?= $block->escapeHtmlAttr($block->getAWCUrl()) ?>" target="_blank"><?= $block->escapeHtml($block->getRisTransactionId()) ?></a></strong>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label"><label><?= __($block->escapeHtml('Persona Country (GEOX)')) ?></label></td>
+                    <td class="value"><strong><?= $block->escapeHtml($block->getRisGeox()) ?></strong></td>
+                </tr>
+                <tr>
+                    <td class="label"><label><?= __($block->escapeHtml('Device Country (DVCC)')) ?></label></td>
+                    <td class="value"><strong><?= $block->escapeHtml($block->getRisCountry()) ?></strong></td>
+                </tr>
+                <tr>
+                    <td class="label"><label><?= __($block->escapeHtml('Data Collector Present (KAPT)')) ?></label></td>
+                    <td class="value"><strong><?= $block->escapeHtml($block->getRisKaptcha()) ?></strong></td>
+                </tr>
+                <tr>
+                    <td class="label"><label><?= __($block->escapeHtml('Cards associated with Persona (CARDS)')) ?></label></td>
+                    <td class="value"><strong><?= $block->escapeHtml($block->getRisCards()) ?></strong></td>
+                </tr>
+                <tr>
+                    <td class="label"><label><?= __($block->escapeHtml('Emails associated with Persona (EMAILS)')) ?></label></td>
+                    <td class="value"><strong><?= $block->escapeHtml($block->getRisEmails()) ?></strong></td>
+                </tr>
+                <tr>
+                    <td class="label"><label><?= __($block->escapeHtml('Devices associated with Persona (DEVICES)')) ?></label></td>
+                    <td class="value"><strong><?= $block->escapeHtml($block->getRisDevices()) ?></strong></td>
+                </tr>
+                <tr>
+                    <td class="label"><label><?= __($block->escapeHtml('IP Address')) ?></label></td>
+                    <td class="value"><strong><?= $block->escapeHtml($block->getIpAddress()) ?></strong></td>
+                </tr>
+                <tr>
+                    <td class="label"><label><?= __($block->escapeHtml('IP City')) ?></label></td>
+                    <td class="value"><strong><?= $block->escapeHtml($block->getIpCity()) ?></strong></td>
+                </tr>
+                <tr>
+                    <td class="label"><label><?= __($block->escapeHtml('Network Type')) ?></label></td>
+                    <td class="value"><strong><?= $block->escapeHtml($block->getNetw()) ?></strong></td>
+                </tr>
+                <tr>
+                    <td class="label"><label><?= __($block->escapeHtml('Is Mobile Device')) ?></label></td>
+                    <td class="value"><strong><?= $block->escapeHtml($block->getMobileDevice()) ?></strong></td>
+                </tr>
+                <tr>
+                    <td class="label"><label><?= __($block->escapeHtml('Mobile Type')) ?></label></td>
+                    <td class="value"><strong><?= $block->escapeHtml($block->getMobileType()) ?></strong></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>

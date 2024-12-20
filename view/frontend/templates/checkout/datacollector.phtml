@@ -1,0 +1,13 @@
+<?php
+/**
+ * Copyright (c) 2024 KOUNT, INC.
+ * See COPYING.txt for license details.
+ */
+
+/* @var $block \Kount\Kount360\Block\Checkout\DataCollector */
+?>
+<script type="text/javascript" src="<?= $block->escapeHtmlAttr($block->getJsDataCollectorUrl()) ?>"></script>
+<script>
+    var client = new ka.ClientSDK();
+    client.autoLoadEvents();
+</script>

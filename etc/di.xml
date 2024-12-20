@@ -1,0 +1,142 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright (c) 2024 KOUNT, INC.
+ * See COPYING.txt for license details.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <preference for="Kount\Kount360\Api\Data\RisInterface" type="Kount\Kount360\Model\Ris"/>
+    <preference for="Kount\Kount360\Api\RisRepositoryInterface" type="Kount\Kount360\Service\RisRepository"/>
+    <preference for="Kount\Kount360\Api\Data\OrderQueueMessageInterface" type="Kount\Kount360\Model\Queue\OrderQueueMessage"/>
+    <virtualType name="Kount\Kount360\Model\Session\Storage" type="Magento\Framework\Session\Storage">
+        <arguments>
+            <argument name="namespace" xsi:type="string">kount</argument>
+        </arguments>
+    </virtualType>
+    <type name="Kount\Kount360\Model\Session">
+        <arguments>
+            <argument name="storage" xsi:type="object">Kount\Kount360\Model\Session\Storage</argument>
+        </arguments>
+    </type>
+    <type name="Kount\Kount360\Model\Logger\Handler\Kount">
+        <arguments>
+            <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+        </arguments>
+    </type>
+    <type name="Kount\Kount360\Model\Logger" >
+        <arguments>
+            <argument name="name" xsi:type="string">main</argument>
+            <argument name="handlers"  xsi:type="array">
+                <item name="system" xsi:type="object">Kount\Kount360\Model\Logger\Handler\Kount</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Magento\Sales\Model\Order\Payment\State\RegisterCaptureNotificationCommand">
+        <plugin name="kount" type="Kount\Kount360\Plugin\Sales\Payment\RegisterCaptureNotificationCommand"/>
+    </type>
+    <type name="Kount\Kount360\Model\Ens\Manager">
+        <arguments>
+            <argument name="supportedEvents" xsi:type="array">
+                <item name="Order.StatusChange" xsi:type="string">Order.StatusChange</item>
+                <item name="Order.NotesAdd" xsi:type="string">Order.NotesAdd</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Kount\Kount360\Model\Ens\EventHandlerFactory">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="Order.StatusChange" xsi:type="object">Kount\Kount360\Model\Ens\EventHandler\StatusEdit</item>
+                <item name="Order.NotesAdd" xsi:type="object">Kount\Kount360\Model\Ens\EventHandler\NotesAdd</item>
+            </argument>
+        </arguments>
+    </type>
+    <preference for="Kount\Kount360\Model\Observer\ConditionInterface" type="Kount\Kount360\Model\Observer\Condition"/>
+    <virtualType name="Kount\Kount360\Model\Observer\PaymentPlaceStart\Condition" type="Kount\Kount360\Model\Observer\Condition" />
+    <type name="Kount\Kount360\Observer\PaymentPlaceStart">
+        <arguments>
+            <argument name="condition"  xsi:type="object">Kount\Kount360\Model\Observer\PaymentPlaceStart\Condition</argument>
+        </arguments>
+    </type>
+    <virtualType name="Kount\Kount360\Model\Observer\PaymentPlaceEnd\Condition" type="Kount\Kount360\Model\Observer\Condition">
+        <arguments>
+            <argument name="default"  xsi:type="boolean">true</argument>
+            <argument name="conditions"  xsi:type="array">
+                <item name="authorizenet_directpost" xsi:type="string">Kount\Kount360\Observer\PaymentPlaceEnd\Condition\AuthorizeDirectPost</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <type name="Kount\Kount360\Observer\PaymentPlaceEnd">
+        <arguments>
+            <argument name="condition"  xsi:type="object">Kount\Kount360\Model\Observer\PaymentPlaceEnd\Condition</argument>
+        </arguments>
+    </type>
+    <virtualType name="Kount\Kount360\Model\Observer\SubmitAllAfter\Condition" type="Kount\Kount360\Model\Observer\Condition">
+        <arguments>
+            <argument name="default"  xsi:type="boolean">true</argument>
+            <argument name="conditions"  xsi:type="array">
+                <item name="payflow_link" xsi:type="object">Kount\Kount360\Model\Observer\Condition\Negative</item>
+                <item name="payflow_advanced" xsi:type="object">Kount\Kount360\Model\Observer\Condition\Negative</item>
+                <item name="authorizenet_directpost" xsi:type="object">Kount\Kount360\Model\Observer\Condition\Negative</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <type name="Kount\Kount360\Model\WorkflowFactory">
+        <arguments>
+            <argument name="workflows" xsi:type="array">
+                <item name="pre_auth" xsi:type="object">Kount\Kount360\Model\Workflow\PreAuth</item>
+                <item name="post_auth" xsi:type="object">\Kount\Kount360\Model\Workflow\PostAuth</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Kount\Kount360\Observer\SubmitAllAfter">
+        <arguments>
+            <argument name="condition" xsi:type="object">Kount\Kount360\Model\Observer\SubmitAllAfter\Condition</argument>
+        </arguments>
+    </type>
+    <virtualType name="Kount\Kount360\Model\Observer\QuoteSubmitFailure\Condition" type="Kount\Kount360\Model\Observer\Condition" />
+    <type name="Kount\Kount360\Observer\QuoteSubmitFailure">
+        <arguments>
+            <argument name="condition"  xsi:type="object">Kount\Kount360\Model\Observer\QuoteSubmitFailure\Condition</argument>
+        </arguments>
+    </type>
+    <virtualType name="Kount\Kount360\Model\Ris\Inquiry\Builder\Payment" type="Kount\Kount360\Model\Ris\Base\Builder\Payment">
+        <arguments>
+            <argument name="defaultPayment" xsi:type="object">Kount\Kount360\Model\Ris\Inquiry\Builder\Payment\NoPayment</argument>
+            <argument name="payments"  xsi:type="array">
+                <item name="braintree" xsi:type="object">Kount\Kount360\Model\Ris\Inquiry\Builder\Payment\Braintree</item>
+                <item name="authorizenet_directpost" xsi:type="object">Kount\Kount360\Model\Ris\Inquiry\Builder\Payment\AuthorizeDirectPost</item>
+                <item name="paypal_express" xsi:type="object">Kount\Kount360\Model\Ris\Inquiry\Builder\Payment\PaypalExpress</item>
+                <item name="payflow_express" xsi:type="object">Kount\Kount360\Model\Ris\Inquiry\Builder\Payment\PaypalExpress</item>
+                <item name="payflow_link" xsi:type="object">Kount\Kount360\Model\Ris\Inquiry\Builder\Payment\PaypalPayflowLink</item>
+                <item name="payflow_advanced" xsi:type="object">Kount\Kount360\Model\Ris\Inquiry\Builder\Payment\PaypalPayflowAdvanced</item>
+                <item name="payflowpro" xsi:type="object">Kount\Kount360\Model\Ris\Inquiry\Builder\Payment\PaypalPayflowPro</item>
+                <item name="authorizenet_acceptjs" xsi:type="object">Kount\Kount360\Model\Ris\Inquiry\Builder\Payment\AuthorizenetAcceptjs</item>
+                <item name="amazon_payment" xsi:type="object">Kount\Kount360\Model\Ris\Inquiry\Builder\Payment\AmazonPay</item>
+                <item name="klarna_kp" xsi:type="object">Kount\Kount360\Model\Ris\Inquiry\Builder\Payment\KlarnaPayments</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <type name="Kount\Kount360\Model\Ris\Inquiry\Builder">
+        <arguments>
+            <argument name="paymentBuilder" xsi:type="object">Kount\Kount360\Model\Ris\Inquiry\Builder\Payment</argument>
+        </arguments>
+    </type>
+    <virtualType name="Kount\Kount360\Model\Ris\Update\Builder\Payment" type="Kount\Kount360\Model\Ris\Base\Builder\Payment">
+        <arguments>
+            <argument name="defaultPayment" xsi:type="string">Kount\Kount360\Model\Ris\Update\Builder\Payment\NoPayment</argument>
+            <argument name="payments"  xsi:type="array">
+                <item name="braintree" xsi:type="object">Kount\Kount360\Model\Ris\Update\Builder\Payment\Braintree</item>
+                <item name="payflow_link" xsi:type="object">Kount\Kount360\Model\Ris\Update\Builder\Payment\PaypalPayflowLink</item>
+                <item name="payflow_advanced" xsi:type="object">Kount\Kount360\Model\Ris\Update\Builder\Payment\PaypalPayflowLink</item>
+                <item name="payflowpro" xsi:type="object">Kount\Kount360\Model\Ris\Update\Builder\Payment\PaypalPayflowPro</item>
+                <item name="authorizenet_acceptjs" xsi:type="object">Kount\Kount360\Model\Ris\Update\Builder\Payment\AuthorizenetAcceptjs</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <type name="Kount\Kount360\Model\Ris\Update\Builder">
+        <arguments>
+            <argument name="paymentBuilder" xsi:type="object">Kount\Kount360\Model\Ris\Update\Builder\Payment</argument>
+        </arguments>
+    </type>
+</config>

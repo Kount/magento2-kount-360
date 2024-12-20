@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright (c) 2024 KOUNT, INC.
+ * See COPYING.txt for license details.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Magento\Paypal\Controller\Payflow\ReturnUrl">
+        <plugin name="kount_payflow" type="Kount\Kount360\Plugin\PayPal\Controller\Payflow\ReturnUrl"/>
+    </type>
+</config>

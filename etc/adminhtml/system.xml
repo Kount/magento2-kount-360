@@ -1,0 +1,225 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright (c) 2024 KOUNT, INC.
+ * See COPYING.txt for license details.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <tab id="kount" translate="label" sortOrder="600">
+            <label>Kount</label>
+        </tab>
+        <section id="kount360" translate="label" type="text" sortOrder="400" showInDefault="1" showInWebsite="1" showInStore="0">
+            <label>Kount 360 Integration</label>
+            <tab>kount</tab>
+            <resource>Kount_Kount360::config</resource>
+            <group id="account" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
+                <label>Account Information</label>
+
+                <field id="enabled" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Enabled</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Enable or disable the module store wide.</comment>
+                </field>
+
+                <field id="test" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Environment</label>
+                    <source_model>Kount\Kount360\Model\Config\Source\Environment</source_model>
+                    <comment>Whether the extension server will run in test mode.</comment>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+
+                <field id="client_id_test" translate="label comment" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Client ID</label>
+                    <comment>Client ID For Test / Sandbox Mode</comment>
+                    <depends>
+                        <field id="enabled">1</field>
+                        <field id="test">1</field>
+                    </depends>
+                </field>
+                <field id="client_id_production" translate="label comment" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Client ID</label>
+                    <comment>Client ID For Production Mode</comment>
+                    <depends>
+                        <field id="enabled">1</field>
+                        <field id="test">0</field>
+                    </depends>
+                </field>
+
+                <field id="api_key_production" translate="label comment" type="obscure" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>API Key</label>
+                    <comment>API Key For Production</comment>
+                    <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                        <field id="test">0</field>
+                    </depends>
+                </field>
+                <field id="api_key_test" translate="label comment" type="obscure" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>API Key</label>
+                    <comment>API Key For Test / Sandbox Mode</comment>
+                    <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                        <field id="test">1</field>
+                    </depends>
+                </field>
+
+                <field id="currency" translate="label comment" type="select" sortOrder="60" showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
+                    <label>Currency</label>
+                    <frontend_model>Kount\Kount360\Block\Adminhtml\System\Config\Currency</frontend_model>
+                    <source_model>Magento\Config\Model\Config\Source\Locale\Currency</source_model>
+                    <depends>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+            </group>
+
+            <group id="workflow" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
+                <label>Payment Review Workflow</label>
+
+                <field id="workflow_mode" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Payment Review Workflow Mode</label>
+                    <source_model>Kount\Kount360\Model\Config\Source\WorkflowMode</source_model>
+                    <depends>
+                        <field id="kount360/account/enabled">1</field>
+                    </depends>
+                </field>
+
+                <field id="decline_action" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Review / Decline Action</label>
+                    <source_model>Kount\Kount360\Model\Config\Source\DeclineAction</source_model>
+                    <comment>Cancel should be used with payment method in Authorize Only mode.  Refund should be used with payment method in Authorize and Capture mode.</comment>
+                    <depends>
+                        <field id="kount360/account/enabled">1</field>
+                    </depends>
+                </field>
+
+                <field id="notify_processor_decline" translate="label comment" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Notify Kount RIS of Processor Decline</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="kount360/account/enabled">1</field>
+                    </depends>
+                </field>
+
+                <field id="prevent_resetting_order_status" translate="label comment" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Prevent Resetting of Order Status</label>
+                    <comment>Prevent resetting of order status on 'payment review' and 'fraud' by payment method.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="kount360/account/enabled">1</field>
+                    </depends>
+                </field>
+            </group>
+
+            <group id="order_settings" translate="label comment" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
+                <label>Order Settings</label>
+
+                <field id="display_review" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Display on Review</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Orders in Kount review status display in customer's account.]]></comment>
+                    <backend_model>Kount\Kount360\Model\Config\Backend\OrderStatusReview</backend_model>
+                </field>
+
+                <field id="display_decline" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Display Declined</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Orders in Kount declined status display in customer's account.]]></comment>
+                    <backend_model>Kount\Kount360\Model\Config\Backend\OrderStatusDecline</backend_model>
+                </field>
+            </group>
+
+            <group id="paymentmethods" translate="label comment" type="text" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="0">
+                <label>Disable Payment Methods</label>
+                <comment>Kount RIS inquiry is not performed for payment methods which are disabled here.</comment>
+
+                <field id="disable_methods" translate="label comment" type="multiselect" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Disable Payment Method Codes</label>
+                    <source_model>Kount\Kount360\Model\Config\Source\PaymentMethods</source_model>
+                    <comment>Select payment methods to disable.</comment>
+                    <depends>
+                        <field id="kount360/account/enabled">1</field>
+                    </depends>
+                </field>
+            </group>
+
+            <group id="ens" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="0">
+                <label>Event Notifications</label>
+                <field id="enabled" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Enabled</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Enable or disable ENS.</comment>
+                </field>
+                <field id="did_where" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Url</label>
+                    <comment>ENS URL to be added in the Kount Agent Web Console</comment>
+                    <frontend_model>Kount\Kount360\Block\Adminhtml\System\Config\Ens</frontend_model>
+                    <depends>
+                        <field id="kount360/ens/enabled">1</field>
+                    </depends>
+                </field>
+                <field id="kount_ips" translate="label comment" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Kount ENS IPs</label>
+                    <comment>ENS and additional load balancer IPs. Enter comma separated. ENS IPs can be obtained from Kount Customer Success Manager.</comment>
+                    <validate>required-entry</validate>
+                    <depends>
+                        <field id="kount360/ens/enabled">1</field>
+                    </depends>
+                </field>
+                <field id="addition_ips" translate="label comment" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Additional IPs for Load Balancer</label>
+                    <comment>Additional IPs from which allowed ENS. Enter comma separated.</comment>
+                    <depends>
+                        <field id="kount360/ens/enabled">1</field>
+                    </depends>
+                </field>
+            </group>
+
+            <group id="log" translate="label" type="text" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="0">
+                <label>Logging</label>
+
+                <field id="enabled" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Enable Kount 360 Logging</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="kount360/account/enabled">1</field>
+                    </depends>
+                </field>
+
+                <field id="ris_metrics_enabled" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Log Ris Metrics</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="kount360/log/enabled">1</field>
+                        <field id="kount360/account/enabled">1</field>
+                    </depends>
+                </field>
+
+                <field id="download" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Log File</label>
+                    <frontend_model>Kount\Kount360\Block\Adminhtml\System\Config\Log</frontend_model>
+                    <depends>
+                        <field id="kount360/account/enabled">1</field>
+                    </depends>
+                </field>
+            </group>
+
+            <group id="admin" translate="label" type="text" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="0">
+                <label>Admin</label>
+
+                <field id="enabled" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Enabled in Admin</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="kount360/account/enabled">1</field>
+                    </depends>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

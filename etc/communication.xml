@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright (c) 2024 KOUNT, INC.
+ * See COPYING.txt for license details.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Communication/etc/communication.xsd">
+    <topic name="kount.orderupdate" is_synchronous="false" request="string">
+        <handler name="koun.orderupdate.handle" type="Kount\Kount360\Model\Queue\Handler\Handler" method="execute" />
+    </topic>
+</config>

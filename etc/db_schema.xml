@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright (c) 2024 KOUNT, INC.
+ * See COPYING.txt for license details.
+ */
+-->
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="kount_360" resource="default" engine="innodb" comment="Kount Ris Data">
+        <column xsi:type="int" name="ris_id" padding="10" nullable="false" unsigned="true" identity="true" comment="Id"/>
+        <column xsi:type="int" name="order_id" padding="10" nullable="false" unsigned="true" comment="Order Id"/>
+        <column xsi:type="varchar" name="score" nullable="true" length="10" comment="Ris Score"/>
+        <column xsi:type="varchar" name="response" nullable="true" length="1" comment="Ris Response"/>
+        <column xsi:type="text" name="rule" nullable="true" comment="Ris Rule"/>
+        <column xsi:type="text" name="description" nullable="true" comment="Ris Description"/>
+        <column xsi:type="varchar" name="transaction_id" nullable="true" comment="Ris Transaction Id"/>
+        <column xsi:type="varchar" name="geox" nullable="true" length="15" comment="Ris GEOX"/>
+        <column xsi:type="varchar" name="country" nullable="true" length="15" comment="Ris DVCC"/>
+        <column xsi:type="varchar" name="kaptcha" nullable="true" length="15" comment="Ris KAPT"/>
+        <column xsi:type="varchar" name="cards" nullable="true" length="15" comment="Ris CARDS"/>
+        <column xsi:type="varchar" name="emails" nullable="true" length="15" comment="Ris EMAILS"/>
+        <column xsi:type="varchar" name="devices" nullable="true" length="15" comment="Ris DEVICES"/>
+        <column xsi:type="text" name="omniscore" nullable="true" comment=""/>
+        <column xsi:type="text" name="ip_address" nullable="true" comment=""/>
+        <column xsi:type="text" name="ip_city" nullable="true" comment=""/>
+        <column xsi:type="text" name="netw" nullable="true" comment=""/>
+        <column xsi:type="text" name="mobile_device" nullable="true" comment=""/>
+        <column xsi:type="text" name="mobile_type" nullable="true" comment=""/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="ris_id"/>
+        </constraint>
+        <index referenceId="kount_RIS_ORDER_ID" indexType="btree">
+            <column name="order_id"/>
+        </index>
+    </table>
+</schema>

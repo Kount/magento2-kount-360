@@ -1,0 +1,35 @@
+{
+  "name": "kount/magento2-kount360",
+  "description": "Magento 2 Kount Integration",
+  "keywords": ["magento2", "kount", "kount 360"],
+  "version": "1.0.0",
+  "type": "magento2-module",
+  "license": ["proprietary"],
+  "authors": [
+    {
+      "name": "Kount",
+      "homepage": "https://kount.com"
+    }
+  ],
+  "require": {
+    "magento/module-backend": "^100.0.0|^101.0.0|^102.0.0",
+    "magento/module-customer": "^100.0.0|^101.0.0|^102.0.0|^103.0.0",
+    "magento/module-sales": "^100.0.0|^101.0.0|^102.0.0|^103.0.0",
+    "magento/module-checkout": "^100.0.0",
+    "magento/module-payment": "^100.0.0",
+    "magento/module-paypal": "^100.0.0|^101.0.0",
+    "magento/module-config": "^100.0.0|^101.0.0",
+    "magento/module-store": "^100.0.0|^101.0.0",
+    "magento/module-directory": "^100.0.0",
+    "magento/framework": "^102.0.0|^103.0.0",
+    "kount/kount-ris-php-sdk": "^7.2|^7.3|^7.4"
+  },
+  "autoload": {
+    "files": [
+      "registration.php"
+    ],
+    "psr-4": {
+      "Kount\\Kount360\\": ""
+    }
+  }
+}
