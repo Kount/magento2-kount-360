@@ -51,9 +51,12 @@ class Order
         $this->processCustomFields($request, $order);
     }
 
-
-    public function processUpdate(DataObject $request, $risTransactionId, OrderInterface $order, $realTimeDecline = false): void
-    {
+    public function processUpdate(
+        DataObject $request,
+        $risTransactionId,
+        OrderInterface $order,
+        $realTimeDecline = false
+    ): void {
         $this->processGeneralInfo($request, $order, true);
         $this->processAccountData($request, $order);
         $this->processOrderTransactions($request, $order, $risTransactionId, $realTimeDecline);
@@ -61,8 +64,8 @@ class Order
 
     /**
      * @param DataObject $request
-     * @param OrderInterface $order
-     * @param bool $order
+     * @param \Magento\Sales\Api\Data\OrderInterface $order
+     * @param bool $updateRequest
      * @return void
      */
     protected function processGeneralInfo(DataObject $request, OrderInterface $order, bool $updateRequest = false): void
@@ -99,10 +102,18 @@ class Order
     /**
      * @param DataObject $request
      * @param OrderInterface $order
+     * @param null $risTransactionId
+     * @param bool $realTimeDecline
      * @return void
+     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
-    protected function processOrderTransactions(DataObject $request, OrderInterface $order, $risTransactionId = null, $realTimeDecline = false): void
-    {
+    protected function processOrderTransactions(
+        DataObject $request,
+        OrderInterface $order,
+        $risTransactionId = null,
+        $realTimeDecline = false
+    ): void {
         $transactionData = [];
         // Payment Data
         $transactionData['merchantTransactionId'] = (string)($order->getPayment()->getLastTransId() ?? '');
@@ -118,18 +129,25 @@ class Order
         ];
 
         // Totals Data
-        $transactionData['subtotal'] = (string)round($order->getSubtotal() * 100);
-        $currency = $this->configAccount->getCurrency();
-        $transactionData['orderTotal'] = (string) round($order->getBaseGrandTotal() * 100);
-        $transactionData['currency'] = $currency;
+        $baseCurrencyCode = $order->getBaseCurrencyCode();
+        $transactionData['subtotal'] = (string)$this->convertAndRoundAmount(
+            $order->getBaseSubtotal(),
+            $baseCurrencyCode
+        );
+        $transactionData['currency'] = $this->configAccount->getCurrency();
+        $transactionData['orderTotal'] = (string)$this->convertAndRoundAmount(
+            $order->getBaseGrandTotal(),
+            $baseCurrencyCode
+        );
 
         // Get Addresses
         $shippingAddress = $order->getShippingAddress();
         $billingAddress = $order->getBillingAddress();
         $transactionData['tax'] = [
             'isTaxable' => $order->getTaxAmount() ? true : false,
-            'taxableCountryCode' => ($shippingAddress) ? $shippingAddress->getCountryId() : $billingAddress->getCountryId(),
-            'taxAmount' => (string)round($order->getTaxAmount() * 100)
+            'taxableCountryCode' => ($shippingAddress) ? $shippingAddress->getCountryId(
+            ) : $billingAddress->getCountryId(),
+            'taxAmount' => (string)$this->convertAndRoundAmount($order->getBaseTaxAmount(), $baseCurrencyCode)
         ];
 
         // Billing Data
@@ -176,6 +194,7 @@ class Order
      * @param float $amount
      * @param string $baseCurrencyCode
      * @return float
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
     protected function convertAndRoundAmount($amount, $baseCurrencyCode)
     {
@@ -196,10 +215,17 @@ class Order
         $fulfillmentData = [];
         $fulfillmentData['type'] = 'SHIPPED';
         $fulfillmentData['shipping'] = [];
-        $fulfillmentData['shipping']['amount'] = (string)round($order->getShippingAmount() * 100);
+        $fulfillmentData['shipping']['amount'] = (string)$this->convertAndRoundAmount(
+            $order->getBaseShippingAmount(),
+            $order->getBaseCurrencyCode()
+        );
         $shippingMethod = $order->getShippingMethod(true);
-        $fulfillmentData['shipping']['provider'] = $shippingMethod ? ($shippingMethod->getData('carrier_code') ?? '') : '';
-        $fulfillmentData['shipping']['method'] = $shippingMethod && $shippingMethod->getData('method') ? 'STANDARD' : '';
+        $fulfillmentData['shipping']['provider'] = $shippingMethod ? ($shippingMethod->getData(
+            'carrier_code'
+        ) ?? '') : '';
+        $fulfillmentData['shipping']['method'] = $shippingMethod && $shippingMethod->getData(
+            'method'
+        ) ? 'STANDARD' : '';
         $fulfillmentData['recipient'] = $this->processShippingInfo($request, $order);
         $fulfillmentData['store'] = $this->processStore($request, $order);
         $request->setData('fulfillment', [$fulfillmentData]);
@@ -245,7 +271,7 @@ class Order
     {
         $discountAmount = (float)$this->calculateDiscountAmount($order, $rule);
         $discountAmount = $discountAmount / 100;
-        $orderTotal = $order->getSubtotal();
+        $orderTotal = $order->getBaseSubtotal();
 
         return $orderTotal > 0 ? $discountAmount / $orderTotal : 0;
     }
@@ -258,11 +284,11 @@ class Order
         $discountAmount = 0;
         foreach ($order->getAllItems() as $item) {
             if ($item->getAppliedRuleIds() && in_array($rule->getRuleId(), explode(',', $item->getAppliedRuleIds()))) {
-                $discountAmount += $item->getDiscountAmount();
+                $discountAmount += $item->getBaseDiscountAmount();
             }
         }
 
-        return (string)round($discountAmount * 100);
+        return (string)$this->convertAndRoundAmount($discountAmount, $order->getBaseCurrencyCode());
     }
 
     /**
@@ -327,12 +353,15 @@ class Order
         }
 
         $cart = [];
-        /** @var OrderInterface\Item $realOrderItem */
+        /** @var \Magento\Sales\Model\Order\Item $realOrderItem */
         foreach ($realOrderItems as $realOrderItem) {
             $productName = $realOrderItem->getName() ?? $realOrderItem->getSku();
             $cart[] = [
                 'id' => $realOrderItem->getQuoteItemId() ?? $realOrderItem->getId(),
-                'price' => (string)round($realOrderItem->getPrice() * 100),
+                'price' => (string)$this->convertAndRoundAmount(
+                    $realOrderItem->getBasePrice(),
+                    $order->getBaseCurrencyCode()
+                ),
                 'description' => ($realOrderItem->getDescription() ? $realOrderItem->getDescription() : $productName),
                 'name' => $productName,
                 'quantity' => round($realOrderItem->getQtyOrdered()),
@@ -351,7 +380,6 @@ class Order
      */
     protected function processIpAndUserAgent(DataObject $request, OrderInterface $order)
     {
-        //$request->setUserAgent($this->httpHeader->getHttpUserAgent());
         $ipAddress = $this->getIpAddress($order);
         $ipAddress = $this->isBackend($ipAddress) ? self::LOCAL_IP : $ipAddress;
         $request->setData('userIp', $ipAddress);
@@ -384,10 +412,10 @@ class Order
         $customFields['EXT'] = $this->kountHelper->getModuleVersion();
         $store = $order->getStore();
         $customFields['ACCOUNT_NAME'] = $store->getBaseUrl() ?? 'MAGENTO';
-        $customFields['PLATFORM'] = 'Adobe Commerce ' . $this->productMetadata->getEdition() . ':' . $this->productMetadata->getVersion();
+        $customFields['PLATFORM'] = 'Adobe Commerce ' . $this->productMetadata->getEdition(
+            ) . ':' . $this->productMetadata->getVersion();
         $request->setData('customFields', $customFields);
     }
-
 
     /**
      * @param $ipAddress
