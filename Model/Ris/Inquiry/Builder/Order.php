@@ -362,7 +362,7 @@ class Order
                     $realOrderItem->getBasePrice(),
                     $order->getBaseCurrencyCode()
                 ),
-                'description' => ($realOrderItem->getDescription() ? $realOrderItem->getDescription() : $productName),
+                'category' => ($realOrderItem->getDescription() ? $realOrderItem->getDescription() : $productName),
                 'name' => $productName,
                 'quantity' => round($realOrderItem->getQtyOrdered()),
                 'sku' => $realOrderItem->getSku(),
