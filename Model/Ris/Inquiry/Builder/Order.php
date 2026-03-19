@@ -31,7 +31,8 @@ class Order
         private \Kount\Kount360\Helper\Data $kountHelper,
         private \Magento\Framework\App\ProductMetadataInterface $productMetadata,
         private \Kount\Kount360\Model\Ris\Inquiry\Builder\Payment\Type $paymentType,
-        private \Magento\Framework\App\Request\DataPersistorInterface $dataPersistor
+        private \Magento\Framework\App\Request\DataPersistorInterface $dataPersistor,
+        private \Magento\Catalog\Api\CategoryRepositoryInterface $categoryRepository
     ) {
     }
 
@@ -356,13 +357,15 @@ class Order
         /** @var \Magento\Sales\Model\Order\Item $realOrderItem */
         foreach ($realOrderItems as $realOrderItem) {
             $productName = $realOrderItem->getName() ?? $realOrderItem->getSku();
+            $productDescription = $realOrderItem->getDescription() ? $realOrderItem->getDescription() : $productName;
             $cart[] = [
                 'id' => $realOrderItem->getQuoteItemId() ?? $realOrderItem->getId(),
                 'price' => (string)$this->convertAndRoundAmount(
                     $realOrderItem->getBasePrice(),
                     $order->getBaseCurrencyCode()
                 ),
-                'category' => ($realOrderItem->getDescription() ? $realOrderItem->getDescription() : $productName),
+                'category' => $this->getFirstCategoryName($realOrderItem->getProduct()) ?: $productDescription,
+                'description' => $productDescription,
                 'name' => $productName,
                 'quantity' => round($realOrderItem->getQtyOrdered()),
                 'sku' => $realOrderItem->getSku(),
@@ -463,5 +466,26 @@ class Order
     private function getCurrentTime()
     {
         return (new \DateTime('now', new \DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z');
+    }
+
+    /**
+     * Get the first category name for a product
+     *
+     * @param \Magento\Catalog\Api\Data\ProductInterface $product
+     * @return string
+     */
+    private function getFirstCategoryName($product): string
+    {
+        try {
+            $categoryIds = $product->getCategoryIds();
+            if (!empty($categoryIds)) {
+                $firstCategoryId = $categoryIds[0];
+                $category = $this->categoryRepository->get($firstCategoryId);
+                return $category->getName();
+            }
+        } catch (\Exception $e) {
+            $this->logger->error('Error getting category name: ' . $e->getMessage());
+        }
+        return '';
     }
 }
