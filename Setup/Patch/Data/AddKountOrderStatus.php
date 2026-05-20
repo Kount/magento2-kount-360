@@ -28,8 +28,7 @@ class AddKountOrderStatus implements DataPatchInterface
 
     /**
      * @return void
-     * @throws LocalizedException
-     * @throws Zend_Validate_Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function apply(): void
     {
