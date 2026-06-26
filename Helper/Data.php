@@ -5,17 +5,14 @@
  */
 namespace Kount\Kount360\Helper;
 
-class Data extends \Magento\Framework\App\Helper\AbstractHelper
+class Data
 {
     /**
-     * @param \Magento\Framework\App\Helper\Context $context
      * @param \Magento\Framework\Module\PackageInfo $packageInfo
      */
     public function __construct(
-        \Magento\Framework\App\Helper\Context $context,
         protected \Magento\Framework\Module\PackageInfo $packageInfo
     ) {
-        parent::__construct($context);
     }
 
     /**
@@ -31,6 +28,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function getModuleName(): string
     {
-        return $this->_getModuleName();
+        return 'Kount_Kount360';
     }
 }

@@ -6,10 +6,11 @@
 namespace Kount\Kount360\Controller\Adminhtml\Config;
 
 use Magento\Backend\App\Action;
+use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Kount\Kount360\Model\Config\Log as ConfigLog;
 
-class Log extends Action
+class Log extends Action implements HttpGetActionInterface
 {
     public function __construct(
         \Magento\Backend\App\Action\Context $context,

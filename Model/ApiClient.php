@@ -10,7 +10,6 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
-use Kount\Kount360\Helper\Data;
 use Kount\Kount360\Model\Config\Account;
 use Kount\Kount360\Model\Config\Authorization;
 

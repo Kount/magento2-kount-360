@@ -5,6 +5,7 @@
  */
 namespace Kount\Kount360\Setup\Patch\Data;
 
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Magento\Framework\Setup\Patch\DataPatchInterface;
 use Magento\Sales\Model\Order;
@@ -29,7 +30,6 @@ class AddKountOrderStatus implements DataPatchInterface
     /**
      * @return void
      * @throws LocalizedException
-     * @throws Zend_Validate_Exception
      */
     public function apply(): void
     {
