@@ -16,8 +16,8 @@
                 <config_key><![CDATA[1b^jIFD)e1@<ZKuH"A+?Ea`p+ATAo6@:Wee+EM+(FD5Z2/N<]]></config_key>
                 <awc_url>https://app.kount.com</awc_url>
                 <awc_url_test_mode>https://app-sandbox.kount.com</awc_url_test_mode>
-                <auth_url_test>https://login.kount.com/oauth2/ausdppkujzCPQuIrY357/v1/token</auth_url_test>
-                <auth_url_production>https://login.kount.com/oauth2/ausdppksgrbyM0abp357/v1/token</auth_url_production>
+                <auth_url_test>https://login-uat.equifax.com/as/token</auth_url_test>
+                <auth_url_production>https://login.equifax.com/as/token</auth_url_production>
                 <orders_endpoint_test>https://api-sandbox.kount.com/commerce/v2/orders</orders_endpoint_test>
                 <orders_endpoint_production>https://api.kount.com/commerce/v2/orders</orders_endpoint_production>
                 <ris_url>https://api.kount.com</ris_url>
