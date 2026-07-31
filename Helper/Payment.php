@@ -10,7 +10,7 @@ use Magento\Payment\Model\Method\AbstractMethod;
 use Magento\Payment\Model\MethodInterface;
 use Magento\Paypal\Model\Config;
 
-class Payment extends \Magento\Framework\App\Helper\AbstractHelper
+class Payment
 {
     /**
      * @var array
@@ -37,18 +37,17 @@ class Payment extends \Magento\Framework\App\Helper\AbstractHelper
     protected $methodFactory;
 
     /**
-     * @param \Magento\Framework\App\Helper\Context $context
      * @param \Magento\Payment\Helper\Data $paymentHelper
      * @param \Magento\Payment\Model\Method\Factory $methodFactory
+     * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
      */
     public function __construct(
-        \Magento\Framework\App\Helper\Context $context,
         \Magento\Payment\Helper\Data $paymentHelper,
-        \Magento\Payment\Model\Method\Factory $methodFactory
+        \Magento\Payment\Model\Method\Factory $methodFactory,
+        protected \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
     ) {
         $this->paymentHelper = $paymentHelper;
         $this->methodFactory = $methodFactory;
-        parent::__construct($context);
     }
 
     /**

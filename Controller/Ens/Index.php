@@ -5,7 +5,7 @@
  */
 namespace Kount\Kount360\Controller\Ens;
 
-use Magento\Framework\App\Action\Action;
+use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\ResponseInterface;
@@ -13,17 +13,16 @@ use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Exception\AuthenticationException;
 use Magento\Framework\Exception\LocalizedException;
 
-class Index extends Action implements \Magento\Framework\App\CsrfAwareActionInterface
+class Index implements HttpPostActionInterface, \Magento\Framework\App\CsrfAwareActionInterface
 {
     public function __construct(
-        protected \Magento\Framework\App\Action\Context $context,
         protected \Kount\Kount360\Model\Config\Account $configAccount,
         protected \Kount\Kount360\Model\Config\Ens $configEns,
         protected \Kount\Kount360\Model\Ens\Manager $ensManager,
         protected \Magento\Framework\HTTP\PhpEnvironment\RemoteAddress $remoteAddress,
-        protected \Kount\Kount360\Model\Logger $logger
+        protected \Kount\Kount360\Model\Logger $logger,
+        protected \Magento\Framework\Controller\ResultFactory $resultFactory
     ) {
-        parent::__construct($context);
     }
 
     /**
