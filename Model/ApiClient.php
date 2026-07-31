@@ -58,7 +58,7 @@ class ApiClient
         try {
             $authenticationRequest = [
                 'headers' => [
-                    'Authorization' => 'Basic' . $this->configAccount->getApiKey(),
+                    'Authorization' => 'Basic ' . $this->configAccount->getApiKey(),
                     'Content-Type' => 'application/x-www-form-urlencoded',
                 ],
                 'form_params' => [
