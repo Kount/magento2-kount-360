@@ -32,6 +32,14 @@
             </argument>
         </arguments>
     </type>
+    <type name="Kount\Kount360\Model\ApiClient">
+        <arguments>
+            <argument name="clientConfig" xsi:type="array">
+                <item name="timeout" xsi:type="number">20</item>
+                <item name="connect_timeout" xsi:type="number">10</item>
+            </argument>
+        </arguments>
+    </type>
     <type name="Magento\Sales\Model\Order\Payment\State\RegisterCaptureNotificationCommand">
         <plugin name="kount" type="Kount\Kount360\Plugin\Sales\Payment\RegisterCaptureNotificationCommand"/>
     </type>

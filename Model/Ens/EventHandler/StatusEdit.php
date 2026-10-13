@@ -38,10 +38,10 @@ class StatusEdit extends EventHandlerOrder implements EventHandlerInterface
      */
     public function process($event): void
     {
-        $orderId = $event['merchantOrderId'];
-        $transactionId  = $event['kountOrderId'];
-        $oldValue = $event['oldValue'];
-        $newValue = $event['newValue'];
+        $orderId = $this->getEventField($event, 'merchantOrderId');
+        $transactionId = $this->getEventField($event, 'kountOrderId');
+        $oldValue = $this->getEventFieldFlattened($event, 'oldValue');
+        $newValue = $this->getEventFieldFlattened($event, 'newValue');
         $this->logger->info('ENS Event Details');
         $this->logger->info('Name: ' . self::EVENT_NAME);
         $this->logger->info('order_number: ' . $orderId);
@@ -136,7 +136,9 @@ class StatusEdit extends EventHandlerOrder implements EventHandlerInterface
     protected function updateRisResponse($order, $ris, $status): void
     {
         $ris->setResponse($status);
-        $order->addStatusHistoryComment(__('Kount ENS Notification: Modify status of an order by agent to ' . $status));
+        $order->addStatusHistoryComment(
+            __('Kount ENS Notification: Modify status of an order by agent to %1', $status)
+        );
         $this->orderRepository->save($order);
     }
 

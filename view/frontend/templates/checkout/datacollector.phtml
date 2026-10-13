@@ -4,10 +4,14 @@
  * See COPYING.txt for license details.
  */
 
-/* @var $block \Kount\Kount360\Block\Checkout\DataCollector */
+/** @var $block \Kount\Kount360\Block\Checkout\DataCollector */
+/** @var $escaper \Magento\Framework\Escaper */
+/** @var $secureRenderer \Magento\Framework\View\Helper\SecureHtmlRenderer */
 ?>
-<script type="text/javascript" src="<?= $block->escapeHtmlAttr($block->getJsDataCollectorUrl()) ?>"></script>
-<script>
-    var client = new ka.ClientSDK();
-    client.autoLoadEvents();
-</script>
+<script src="<?= $escaper->escapeUrl($block->getJsDataCollectorUrl()) ?>"></script>
+<?= /* @noEscape */ $secureRenderer->renderTag(
+    'script',
+    [],
+    'var client = new ka.ClientSDK(); client.autoLoadEvents();',
+    false
+) ?>

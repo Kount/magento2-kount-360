@@ -7,15 +7,22 @@ namespace Kount\Kount360\Model;
 
 use Exception;
 use GuzzleHttp\Client;
+use GuzzleHttp\ClientFactory;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use Kount\Kount360\Helper\Data;
 use Kount\Kount360\Model\Config\Account;
 use Kount\Kount360\Model\Config\Authorization;
+use Kount\Kount360\Model\Config\Log as ConfigLog;
+use Kount\Kount360\Model\Lib\PayloadSanitizer;
 
 class ApiClient
 {
+    const DEFAULT_TIMEOUT = 20;
+
+    const DEFAULT_CONNECT_TIMEOUT = 10;
+
     protected string $accessToken = '';
 
     /** @var Client */
@@ -27,13 +34,46 @@ class ApiClient
      * @param \Kount\Kount360\Model\Config\Account $configAccount
      * @param \Kount\Kount360\Model\Logger $logger
      * @param \Kount\Kount360\Model\Config\Authorization $authorizationConfig
+     * @param \GuzzleHttp\ClientFactory|null $clientFactory
+     * @param \Kount\Kount360\Model\Lib\PayloadSanitizer|null $payloadSanitizer
+     * @param \Kount\Kount360\Model\Config\Log|null $configLog
+     * @param array $clientConfig
      */
     public function __construct(
         private Account $configAccount,
         private Logger $logger,
-        private Authorization $authorizationConfig
+        private Authorization $authorizationConfig,
+        private ?ClientFactory $clientFactory = null,
+        private ?PayloadSanitizer $payloadSanitizer = null,
+        private ?ConfigLog $configLog = null,
+        private array $clientConfig = []
     ) {
-        $this->httpClient = new Client();
+        $config = $this->clientConfig + [
+            'timeout' => self::DEFAULT_TIMEOUT,
+            'connect_timeout' => self::DEFAULT_CONNECT_TIMEOUT,
+        ];
+
+        $this->httpClient = $this->clientFactory !== null
+            ? $this->clientFactory->create(['config' => $config])
+            : new Client($config);
+    }
+
+    /**
+     * @param string $label
+     * @param mixed $payload
+     * @return void
+     */
+    private function logPayload(string $label, $payload): void
+    {
+        if ($this->configLog === null || !$this->configLog->isRisMetricsEnabled()) {
+            return;
+        }
+
+        $sanitized = $this->payloadSanitizer !== null
+            ? $this->payloadSanitizer->sanitize($payload)
+            : '[payload logging unavailable]';
+
+        $this->logger->info($label . ': ' . $sanitized);
     }
 
     /**
@@ -56,6 +96,8 @@ class ApiClient
             throw new Exception('Kount Authentication failed. Please ensure API Key is Valid');
         }
 
+        $this->authenticationRetried = true;
+
         try {
             $authenticationRequest = [
                 'headers' => [
@@ -74,14 +116,11 @@ class ApiClient
             $data = json_decode($response->getBody()->getContents(), true);
             $this->logger->info('Kount Authentication Response Received');
             if (!isset($data['access_token'])) {
-                throw new Exception(
-                    'Kount Authentication failed. Access token not found in response. Response: ' . json_encode($data)
-                );
+                throw new Exception('Kount Authentication failed. Access token not found in response.');
             }
 
             $this->accessToken = $data['access_token'];
             $this->authorizationConfig->setAccessToken($this->accessToken);
-            $this->authenticationRetried = true;
         } catch (RequestException $e) {
             $this->logger->error('Kount Authentication on Request error: ' . $e->getMessage());
             throw new Exception('Kount Authentication failed. Check error logs for details');
@@ -105,7 +144,7 @@ class ApiClient
             $this->authenticate();
         }
         try {
-            $this->logger->info('Kount 360 POST Request: ' . json_encode($body));
+            $this->logPayload('Kount 360 POST Request', $body);
             $this->logger->info('Start Request Time:' . gmdate('Y-m-d\TH:i:s\Z'));
             $response = $this->httpClient->request('POST', $url, [
                 'headers' => [
@@ -127,15 +166,14 @@ class ApiClient
                 return $this->post($action, $url, $body);
             }
             if ($e->hasResponse()) {
-                $responseBody = $e->getResponse()->getBody()->getContents();
-                $this->logger->error('Kount 360 Full Request: ' . json_encode($body));
-                $this->logger->error('Kount 360 Full Response: ' . $responseBody);
+                $this->logPayload('Kount 360 Full Request', $body);
+                $this->logPayload('Kount 360 Full Response', $e->getResponse()->getBody()->getContents());
             } else {
                 $this->logger->error('Kount 360 Error: No response received from the server.');
             }
             throw new Exception('Kount 360 Authentication error: ' . $e->getMessage());
         } catch (GuzzleException $e) {
-            if ($e->getResponse()->getStatusCode() === 500) {
+            if ($this->getStatusCode($e) === 500) {
                 $responseBody = $e->getMessage();
                 if (stripos($responseBody, 'invalid token') !== false || stripos($responseBody, '401') !== false) {
                     $this->logger->info('Kount 360 401.04 Authentication error, retrying...');
@@ -155,7 +193,7 @@ class ApiClient
         }
 
         try {
-            $this->logger->info('Kount 360 PATCH Request: ' . json_encode($body));
+            $this->logPayload('Kount 360 PATCH Request', $body);
             $this->logger->info('Start Request Time:' . gmdate('Y-m-d\TH:i:s\Z'));
             $response = $this->httpClient->request('PATCH', $url, [
                 'headers' => [
@@ -173,14 +211,13 @@ class ApiClient
                 return $this->patch($action, $url, $body);
             }
             if ($e->hasResponse()) {
-                $responseBody = $e->getResponse()->getBody()->getContents();
-                $this->logger->error('Kount 360 Full Response: ' . $responseBody);
+                $this->logPayload('Kount 360 Full Response', $e->getResponse()->getBody()->getContents());
             } else {
                 $this->logger->error('Kount 360 Error: No response received from the server.');
             }
             throw new Exception('Kount 360 Authentication error: ' . $e->getMessage());
         } catch (GuzzleException $e) {
-            if ($e->getResponse()->getStatusCode() === 500) {
+            if ($this->getStatusCode($e) === 500) {
                 $responseBody = $e->getMessage();
                 if (stripos($responseBody, 'invalid token') !== false || stripos($responseBody, '401') !== false) {
                     $this->logger->info('Kount 360 401.04 Authentication error, retrying...');
@@ -188,14 +225,31 @@ class ApiClient
                     return $this->patch($action, $url, $body);
                 }
             }
-            if ($e->hasResponse()) {
-                $responseBody = $e->getResponse()->getBody()->getContents();
-                $this->logger->error('Kount 360 Full Request: ' . json_encode($body));
-                $this->logger->error('Kount 360 Full Response: ' . $responseBody);
+            if ($this->hasResponse($e)) {
+                $this->logPayload('Kount 360 Full Request', $body);
+                $this->logPayload('Kount 360 Full Response', $e->getResponse()->getBody()->getContents());
             } else {
                 $this->logger->error('Kount 360 Error: No response received from the server.');
             }
             throw new Exception('Kount 360 Failed to Update during  ' . $action);
         }
+    }
+
+    /**
+     * @param \GuzzleHttp\Exception\GuzzleException $e
+     * @return bool
+     */
+    private function hasResponse(GuzzleException $e): bool
+    {
+        return $e instanceof RequestException && $e->hasResponse();
+    }
+
+    /**
+     * @param \GuzzleHttp\Exception\GuzzleException $e
+     * @return int|null
+     */
+    private function getStatusCode(GuzzleException $e): ?int
+    {
+        return $this->hasResponse($e) ? $e->getResponse()->getStatusCode() : null;
     }
 }

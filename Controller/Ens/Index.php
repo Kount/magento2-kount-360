@@ -6,6 +6,7 @@
 namespace Kount\Kount360\Controller\Ens;
 
 use Magento\Framework\App\Action\Action;
+use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\ResponseInterface;
@@ -13,15 +14,18 @@ use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Exception\AuthenticationException;
 use Magento\Framework\Exception\LocalizedException;
 
-class Index extends Action implements \Magento\Framework\App\CsrfAwareActionInterface
+class Index extends Action implements \Magento\Framework\App\CsrfAwareActionInterface, HttpPostActionInterface
 {
+    const MAX_LOGGED_PAYLOAD_LENGTH = 8192;
+
     public function __construct(
         protected \Magento\Framework\App\Action\Context $context,
         protected \Kount\Kount360\Model\Config\Account $configAccount,
         protected \Kount\Kount360\Model\Config\Ens $configEns,
         protected \Kount\Kount360\Model\Ens\Manager $ensManager,
         protected \Magento\Framework\HTTP\PhpEnvironment\RemoteAddress $remoteAddress,
-        protected \Kount\Kount360\Model\Logger $logger
+        protected \Kount\Kount360\Model\Logger $logger,
+        protected \Kount\Kount360\Model\Config\Log $configLog
     ) {
         parent::__construct($context);
     }
@@ -39,14 +43,15 @@ class Index extends Action implements \Magento\Framework\App\CsrfAwareActionInte
             if (!$this->isAllowed()) {
                 throw new AuthenticationException(
                     __(
-                        'Invalid ENS IP Address: ' . $this->remoteAddress->getRemoteAddress(
-                        ) . '. Please ensure you whitelist this IP address in the Magento Kount configuration settings'
+                        'Invalid ENS IP Address: %1. Please ensure you whitelist this IP address'
+                        . ' in the Magento Kount configuration settings',
+                        $this->remoteAddress->getRemoteAddress()
                     )
                 );
             }
 
             $rawInput = file_get_contents('php://input');
-            $this->logger->debug(__('Raw JSON Input: %1', $rawInput));
+            $this->logger->debug(__('Raw JSON Input: %1', $this->sanitizeForLog($rawInput)));
 
             if (empty($rawInput)) {
                 throw new LocalizedException(__('ENS Update Failed: No data received.'));
@@ -62,7 +67,11 @@ class Index extends Action implements \Magento\Framework\App\CsrfAwareActionInte
                 throw new LocalizedException(__('ENS Update Failed: Decoded JSON is not an array.'));
             }
 
-            $this->logger->info('Validated Received JSON Data: %1', [json_encode($jsonData)]);
+            if ($this->configLog->isRisMetricsEnabled()) {
+                $this->logger->info(
+                    'Validated Received JSON Data: ' . $this->sanitizeForLog(json_encode($jsonData))
+                );
+            }
 
             $this->respondOnReceiptOfEvents();
             $response = $this->ensManager->handleRequest($jsonData);
@@ -80,6 +89,22 @@ class Index extends Action implements \Magento\Framework\App\CsrfAwareActionInte
         return $resultRaw;
     }
 
+    /**
+     * @param string|false $payload
+     * @return string
+     */
+    protected function sanitizeForLog($payload): string
+    {
+        if (!is_string($payload)) {
+            return '';
+        }
+
+        if (strlen($payload) > self::MAX_LOGGED_PAYLOAD_LENGTH) {
+            $payload = substr($payload, 0, self::MAX_LOGGED_PAYLOAD_LENGTH) . '… [truncated]';
+        }
+
+        return str_replace('<?', '< ?', $payload);
+    }
 
     /**
      * @return bool
@@ -94,9 +119,7 @@ class Index extends Action implements \Magento\Framework\App\CsrfAwareActionInte
      */
     protected function isAllowed(): bool
     {
-        return $this->configAccount->isTestMode()
-            ||
-            $this->configEns->isAllowedIp($this->remoteAddress->getRemoteAddress());
+        return $this->configEns->isAllowedIp($this->remoteAddress->getRemoteAddress());
     }
 
     /**

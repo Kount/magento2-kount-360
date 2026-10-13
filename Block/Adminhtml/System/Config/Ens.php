@@ -36,23 +36,23 @@ class Ens extends Field
      */
     protected function _getElementHtml(AbstractElement $element): string
     {
-        $html = '<div id="' . $element->getHtmlId() . '">';
+        $html = '<div id="' . $this->escapeHtmlAttr($element->getHtmlId()) . '">';
         $stores = $this->_storeManager->getStores();
 
         if (empty($stores)) {
-            return '<span>' . $this->getEnsUrl() . '</span>';
+            return '<span>' . $this->escapeUrl($this->getEnsUrl()) . '</span>';
         }
 
         $html .= '<ul style="list-style-type: none; padding-left: 0;">';
         foreach ($stores as $store) {
-            $storeId = $store->getId();
             $storeName = $store->getName();
             $storeCode = $store->getCode();
             $ensUrl = $this->getEnsUrlForStore($store);
 
             $html .= '<li style="margin-bottom: 10px;">';
-            $html .= '<strong>' . $storeName . ' (' . $storeCode . '):</strong><br/>';
-            $html .= '<span>' . $ensUrl . '</span>';
+            $html .= '<strong>' . $this->escapeHtml($storeName)
+                . ' (' . $this->escapeHtml($storeCode) . '):</strong><br/>';
+            $html .= '<span>' . $this->escapeUrl($ensUrl) . '</span>';
             $html .= '</li>';
         }
         $html .= '</ul>';

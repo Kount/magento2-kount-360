@@ -30,7 +30,9 @@ class RisService
         private \Magento\Framework\App\State $state,
         private \Kount\Kount360\Model\Config\Account $configAccount,
         private \Magento\Framework\Serialize\Serializer\Json $serializerJson,
-        private \Magento\Framework\App\Request\DataPersistorInterface $dataPersistor
+        private \Magento\Framework\App\Request\DataPersistorInterface $dataPersistor,
+        private ?\Kount\Kount360\Model\Config\Log $configLog = null,
+        private ?\Kount\Kount360\Model\Lib\PayloadSanitizer $payloadSanitizer = null
     ) {
 
     }
@@ -82,7 +84,7 @@ class RisService
         $url = $this->configAccount->getKountOrderEndpoint();
         $inquiryRequest = $inquiryRequest->getData();
         $inquiryResponse = $this->apiClient->post('inquiryRequest', $url, $inquiryRequest);
-        $this->logger->info('Kount 360 POST Response: ' . json_encode($inquiryResponse));
+        $this->logResponse('Kount 360 POST Response', $inquiryResponse);
         $transactionId = $this->getTransactionId($inquiryResponse);
         if (!$transactionId) {
             $this->logger->warning('No transaction_id in response, skipping Update.');
@@ -141,7 +143,7 @@ class RisService
         $updateRequest = $updateRequest->getData();
         $url = $this->configAccount->getKountOrderEndpoint();
         $response = $this->apiClient->patch('updateOrder', $url . '/' . $ris->getTransactionId(), $updateRequest);
-        $this->logger->info('Kount 360 PATCH Response: ' . json_encode($response));
+        $this->logResponse('Kount 360 PATCH Response', $response);
 
         return true;
     }
@@ -153,8 +155,26 @@ class RisService
         $updateRequest = $updateRequest->getData();
         $url = $this->configAccount->getKountOrderEndpoint();
         $response = $this->apiClient->patch('updateOrder', $url . '/' . $risTransactionId, $updateRequest);
-        $this->logger->info('Kount 360 PATCH Response: ' . json_encode($response));
+        $this->logResponse('Kount 360 PATCH Response', $response);
 
         return true;
+    }
+
+    /**
+     * @param string $label
+     * @param mixed $response
+     * @return void
+     */
+    private function logResponse(string $label, $response): void
+    {
+        if ($this->configLog === null || !$this->configLog->isRisMetricsEnabled()) {
+            return;
+        }
+
+        $payload = $this->payloadSanitizer !== null
+            ? $this->payloadSanitizer->sanitize($response)
+            : '[payload logging unavailable]';
+
+        $this->logger->info($label . ': ' . $payload);
     }
 }

@@ -39,6 +39,7 @@
             </workflow>
             <log>
                 <enabled>1</enabled>
+                <ris_metrics_enabled>0</ris_metrics_enabled>
             </log>
         </kount360>
     </default>
