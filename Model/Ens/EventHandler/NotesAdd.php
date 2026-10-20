@@ -6,6 +6,7 @@
 namespace Kount\Kount360\Model\Ens\EventHandler;
 
 use Kount\Kount360\Model\Ens\EventHandlerInterface;
+use Kount\Kount360\Model\Lib\PayloadSanitizer;
 
 class NotesAdd extends EventHandlerOrder implements EventHandlerInterface
 {
@@ -15,13 +16,15 @@ class NotesAdd extends EventHandlerOrder implements EventHandlerInterface
      * @param \Kount\Kount360\Model\Logger $logger
      * @param \Magento\Sales\Api\OrderRepositoryInterface $orderRepository
      * @param \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder
+     * @param \Kount\Kount360\Model\Lib\PayloadSanitizer|null $payloadSanitizer
      */
     public function __construct(
         protected \Kount\Kount360\Model\Logger $logger,
         protected \Magento\Sales\Api\OrderRepositoryInterface $orderRepository,
-        protected \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder
+        protected \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder,
+        ?PayloadSanitizer $payloadSanitizer = null
     ) {
-        parent::__construct($orderRepository, $searchCriteriaBuilder);
+        parent::__construct($orderRepository, $searchCriteriaBuilder, $payloadSanitizer);
     }
 
     /**

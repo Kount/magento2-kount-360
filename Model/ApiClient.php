@@ -92,11 +92,16 @@ class ApiClient
 
         $this->accessToken = '';
 
-        if ($this->authenticationRetried) {
-            throw new Exception('Kount Authentication failed. Please ensure API Key is Valid');
-        }
+        // Only a refresh consumes the retry budget. A cold-start mint (no cached token --
+        // the state every merchant is in right after RemoveLegacyAccessTokens runs) must not
+        // burn it, or the one designed post-401 refresh would throw instead of retrying.
+        if ($refresh) {
+            if ($this->authenticationRetried) {
+                throw new Exception('Kount Authentication failed. Please ensure API Key is Valid');
+            }
 
-        $this->authenticationRetried = true;
+            $this->authenticationRetried = true;
+        }
 
         try {
             $authenticationRequest = [

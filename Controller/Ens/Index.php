@@ -5,6 +5,7 @@
  */
 namespace Kount\Kount360\Controller\Ens;
 
+use Kount\Kount360\Model\Lib\PayloadSanitizer;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\App\Request\InvalidRequestException;
@@ -25,8 +26,10 @@ class Index extends Action implements \Magento\Framework\App\CsrfAwareActionInte
         protected \Kount\Kount360\Model\Ens\Manager $ensManager,
         protected \Magento\Framework\HTTP\PhpEnvironment\RemoteAddress $remoteAddress,
         protected \Kount\Kount360\Model\Logger $logger,
-        protected \Kount\Kount360\Model\Config\Log $configLog
+        protected \Kount\Kount360\Model\Config\Log $configLog,
+        protected ?PayloadSanitizer $payloadSanitizer = null
     ) {
+        $this->payloadSanitizer = $payloadSanitizer ?? new PayloadSanitizer();
         parent::__construct($context);
     }
 
@@ -51,7 +54,7 @@ class Index extends Action implements \Magento\Framework\App\CsrfAwareActionInte
             }
 
             $rawInput = file_get_contents('php://input');
-            $this->logger->debug(__('Raw JSON Input: %1', $this->sanitizeForLog($rawInput)));
+            $this->logger->debug(__('ENS payload received: %1 bytes', strlen((string)$rawInput)));
 
             if (empty($rawInput)) {
                 throw new LocalizedException(__('ENS Update Failed: No data received.'));
@@ -60,6 +63,8 @@ class Index extends Action implements \Magento\Framework\App\CsrfAwareActionInte
             $jsonData = json_decode($rawInput, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
+                // Undecodable bytes carry no keys to mask, so neutralize and cap them instead.
+                $this->logger->debug(__('Malformed ENS payload: %1', $this->sanitizeForLog($rawInput)));
                 throw new LocalizedException(__('ENS Update Failed: Invalid JSON data received. Error: %1', [json_last_error_msg()]));
             }
 
@@ -68,8 +73,10 @@ class Index extends Action implements \Magento\Framework\App\CsrfAwareActionInte
             }
 
             if ($this->configLog->isRisMetricsEnabled()) {
+                // Pass the decoded array, never a JSON string: key-based PII masking only
+                // applies to arrays, so pre-encoding here would silently defeat it.
                 $this->logger->info(
-                    'Validated Received JSON Data: ' . $this->sanitizeForLog(json_encode($jsonData))
+                    'Validated Received JSON Data: ' . $this->sanitizeForLog($jsonData)
                 );
             }
 
@@ -90,20 +97,14 @@ class Index extends Action implements \Magento\Framework\App\CsrfAwareActionInte
     }
 
     /**
-     * @param string|false $payload
+     * Arrays are masked by key before encoding; scalars are neutralized and capped.
+     *
+     * @param mixed $payload
      * @return string
      */
     protected function sanitizeForLog($payload): string
     {
-        if (!is_string($payload)) {
-            return '';
-        }
-
-        if (strlen($payload) > self::MAX_LOGGED_PAYLOAD_LENGTH) {
-            $payload = substr($payload, 0, self::MAX_LOGGED_PAYLOAD_LENGTH) . '… [truncated]';
-        }
-
-        return str_replace('<?', '< ?', $payload);
+        return $this->payloadSanitizer->sanitize($payload);
     }
 
     /**

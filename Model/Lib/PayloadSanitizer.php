@@ -14,6 +14,21 @@ class PayloadSanitizer
     const MASK = '***';
 
     /**
+     * Sequences that are meaningful to a downstream interpreter and must never survive verbatim.
+     *
+     * `<?` opens a PHP block in any plaintext file that is later included.
+     * `{{` / `}}` open and close a directive in Magento's template engine, which processes order
+     * comments and other persisted strings when they are rendered into transactional emails.
+     *
+     * @var string[]
+     */
+    private const NEUTRALIZED_SEQUENCES = [
+        '<?' => '< ?',
+        '{{' => '{ {',
+        '}}' => '} }',
+    ];
+
+    /**
      * @var string[]
      */
     private const SENSITIVE_KEYS = [
@@ -69,7 +84,17 @@ class PayloadSanitizer
      */
     public function neutralize(string $value): string
     {
-        return str_replace('<?', '< ?', $value);
+        $search = array_keys(self::NEUTRALIZED_SEQUENCES);
+        $replace = array_values(self::NEUTRALIZED_SEQUENCES);
+
+        // A single pass is not enough: `{{{{` becomes `{ {{ {`, which still carries a `{{` pair.
+        // Each pass inserts separators and never creates a new adjacency, so this converges.
+        do {
+            $previous = $value;
+            $value = str_replace($search, $replace, $value);
+        } while ($value !== $previous);
+
+        return $value;
     }
 
     /**

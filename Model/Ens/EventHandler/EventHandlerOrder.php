@@ -5,6 +5,7 @@
  */
 namespace Kount\Kount360\Model\Ens\EventHandler;
 
+use Kount\Kount360\Model\Lib\PayloadSanitizer;
 use Magento\Sales\Api\Data\OrderInterface;
 
 /**
@@ -19,11 +20,14 @@ class EventHandlerOrder
     /**
      * @param \Magento\Sales\Api\OrderRepositoryInterface $orderRepository
      * @param \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder
+     * @param \Kount\Kount360\Model\Lib\PayloadSanitizer|null $payloadSanitizer
      */
     public function __construct(
         protected \Magento\Sales\Api\OrderRepositoryInterface $orderRepository,
-        protected \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder
+        protected \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder,
+        protected ?PayloadSanitizer $payloadSanitizer = null
     ) {
+        $this->payloadSanitizer = $payloadSanitizer ?? new PayloadSanitizer();
     }
 
     /**
@@ -60,6 +64,8 @@ class EventHandlerOrder
         if ($value === '' && $required) {
             throw new \InvalidArgumentException("Empty ENS event field: {$key}");
         }
+
+        $value = $this->payloadSanitizer->neutralize($value);
 
         if (strlen($value) > self::MAX_FIELD_LENGTH) {
             $value = substr($value, 0, self::MAX_FIELD_LENGTH);
