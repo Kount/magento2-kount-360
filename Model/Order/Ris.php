@@ -21,13 +21,15 @@ class Ris
      * @param \Kount\Kount360\Api\RisRepositoryInterface $risRepository
      * @param \Kount\Kount360\Model\Logger $logger
      * @param \Magento\Framework\App\ResourceConnection $resource
+     * @param \Kount\Kount360\Model\Config\Log $configLog
      */
     public function __construct(
         protected \Kount\Kount360\Api\Data\RisInterfaceFactory $risFactory,
         protected \Magento\Sales\Api\Data\OrderExtensionFactory $orderExtensionFactory,
         protected \Kount\Kount360\Api\RisRepositoryInterface $risRepository,
         protected \Kount\Kount360\Model\Logger $logger,
-        protected \Magento\Framework\App\ResourceConnection $resource
+        protected \Magento\Framework\App\ResourceConnection $resource,
+        protected \Kount\Kount360\Model\Config\Log $configLog
     ) {
     }
 
@@ -136,20 +138,33 @@ class Ris
             $this->linkRis($ris, $order);
         }
 
-        // Logging updated values
+        $this->logRisValues($ris);
+    }
+
+    /**
+     * @param \Kount\Kount360\Api\Data\RisInterface $ris
+     * @return void
+     */
+    private function logRisValues($ris): void
+    {
         $this->logger->info('Setting RIS Response to order:');
         $this->logger->info('Response: ' . $ris->getResponse());
         $this->logger->info('Score: ' . $ris->getScore());
         $this->logger->info('Rules: ' . $ris->getRule());
         $this->logger->info('Description: ' . $ris->getDescription());
         $this->logger->info('TransactionId: ' . $ris->getTransactionId());
+        $this->logger->info('Omniscore: ' . $ris->getOmniscore());
+
+        if (!$this->configLog->isRisMetricsEnabled()) {
+            return;
+        }
+
         $this->logger->info('Geox: ' . $ris->getGeox());
         $this->logger->info('Country: ' . $ris->getCountry());
         $this->logger->info('Kaptcha: ' . $ris->getKaptcha());
         $this->logger->info('Cards: ' . $ris->getCards());
         $this->logger->info('Emails: ' . $ris->getEmails());
         $this->logger->info('Devices: ' . $ris->getDevices());
-        $this->logger->info('Omniscore: ' . $ris->getOmniscore());
         $this->logger->info('IP Address: ' . $ris->getIpAddress());
         $this->logger->info('IP City: ' . $ris->getIpCity());
         $this->logger->info('Network: ' . $ris->getNetw());

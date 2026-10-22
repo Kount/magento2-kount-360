@@ -49,7 +49,7 @@ class IpAddress extends Field
     protected function getMyIpLink(): string
     {
         return '<p class="note"><span>'
-            . __('Current IP: %1', $this->remoteAddress->getRemoteAddress())
+            . $this->escapeHtml(__('Current IP: %1', $this->remoteAddress->getRemoteAddress()))
             . '</span></p>';
     }
 }

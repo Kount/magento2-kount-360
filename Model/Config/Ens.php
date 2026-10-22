@@ -52,12 +52,12 @@ class Ens
      * @param array $ips
      * @return bool
      */
-    private function isInCidrRange($ip, array $ips) : bool
+    public function isInCidrRange($ip, array $ips) : bool
     {
         $cidrRanges = array_filter(
             $ips,
             function ($ipAddress) {
-                return strpos($ipAddress, '/') !== false;
+                return is_string($ipAddress) && strpos($ipAddress, '/') !== false;
             }
         );
 
@@ -65,23 +65,61 @@ class Ens
             return false;
         }
 
-        $longIp = ip2long($ip);
-        if (!$longIp) {
+        $packedIp = @inet_pton((string)$ip);
+        if ($packedIp === false) {
             return false;
         }
 
         foreach ($cidrRanges as $cidrIp) {
-            $cidr = explode('/', $cidrIp);
-            $range[0] = long2ip((ip2long($cidr[0])) & ((-1 << (32 - (int)$cidr[1]))));
-            $range[1] = long2ip((ip2long($range[0])) + pow(2, (32 - (int)$cidr[1])) - 1);
-            $rangeStart = ip2long($range[0]);
-            $rangeEnd = ip2long($range[1]);
-            if ($rangeStart <= $longIp && $longIp <= $rangeEnd) {
+            if ($this->matchesCidr($packedIp, (string)$cidrIp)) {
                 return true;
             }
         }
 
         return false;
+    }
+
+    /**
+     * @param string $packedIp
+     * @param string $cidrIp
+     * @return bool
+     */
+    private function matchesCidr(string $packedIp, string $cidrIp): bool
+    {
+        $parts = explode('/', $cidrIp, 2);
+        if (count($parts) !== 2 || !is_numeric($parts[1])) {
+            return false;
+        }
+
+        $packedSubnet = @inet_pton(trim($parts[0]));
+        if ($packedSubnet === false || strlen($packedSubnet) !== strlen($packedIp)) {
+            return false;
+        }
+
+        $maxBits = strlen($packedIp) * 8;
+        $prefixBits = (int)$parts[1];
+        if ($prefixBits < 0 || $prefixBits > $maxBits) {
+            return false;
+        }
+
+        if ($prefixBits === 0) {
+            return true;
+        }
+
+        $wholeBytes = intdiv($prefixBits, 8);
+        $remainderBits = $prefixBits % 8;
+
+        if ($wholeBytes > 0 && strncmp($packedIp, $packedSubnet, $wholeBytes) !== 0) {
+            return false;
+        }
+
+        if ($remainderBits === 0) {
+            return true;
+        }
+
+        $mask = chr((0xFF << (8 - $remainderBits)) & 0xFF);
+
+        return ($packedIp[$wholeBytes] & $mask) === ($packedSubnet[$wholeBytes] & $mask);
     }
 
     /**

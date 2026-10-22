@@ -6,6 +6,7 @@
 namespace Kount\Kount360\Model\Ens\EventHandler;
 
 use Kount\Kount360\Model\Ens\EventHandlerInterface;
+use Kount\Kount360\Model\Lib\PayloadSanitizer;
 
 class NotesAdd extends EventHandlerOrder implements EventHandlerInterface
 {
@@ -15,13 +16,15 @@ class NotesAdd extends EventHandlerOrder implements EventHandlerInterface
      * @param \Kount\Kount360\Model\Logger $logger
      * @param \Magento\Sales\Api\OrderRepositoryInterface $orderRepository
      * @param \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder
+     * @param \Kount\Kount360\Model\Lib\PayloadSanitizer $payloadSanitizer
      */
     public function __construct(
         protected \Kount\Kount360\Model\Logger $logger,
         protected \Magento\Sales\Api\OrderRepositoryInterface $orderRepository,
-        protected \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder
+        protected \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder,
+        PayloadSanitizer $payloadSanitizer
     ) {
-        parent::__construct($orderRepository, $searchCriteriaBuilder);
+        parent::__construct($orderRepository, $searchCriteriaBuilder, $payloadSanitizer);
     }
 
     /**
@@ -30,22 +33,26 @@ class NotesAdd extends EventHandlerOrder implements EventHandlerInterface
      */
     public function process($event): void
     {
-        $orderId = $event['merchantOrderId'];
-        $transactionId  = $event['kountOrderId'];
-        $oldValue = $event['oldValue'];
-        $newValue = $event['newValue'];
+        $orderId = $this->getEventField($event, 'merchantOrderId');
+        $transactionId = $this->getEventField($event, 'kountOrderId', false);
+        $oldValue = $this->getEventFieldFlattened($event, 'oldValue', false);
+        $newValue = $this->getEventFieldFlattened($event, 'newValue', false);
+        $reasonCode = $this->getEventField($event, 'reasonCode', false);
+
         $this->logger->info('ENS Event Details');
         $this->logger->info('Name: ' . self::EVENT_NAME);
         $this->logger->info('order_number: ' . $orderId);
         $this->logger->info('transaction_id: ' . $transactionId);
         $this->logger->info('old_value: ' . $oldValue);
-        $this->logger->info('new_value: ' . $newValue[0]);
+        $this->logger->info('new_value: ' . $newValue);
 
-        // Create a new comment for the order
-        $newComment = "Reason Code: " . $newValue['@']['reason_code'] . "<br>"
-                      . "Comment: " . $newValue[0];
+        $commentParts = [];
+        if ($reasonCode !== '') {
+            $commentParts[] = 'Reason Code: ' . $reasonCode;
+        }
+        $commentParts[] = 'Comment: ' . $newValue;
+        $newComment = implode(' | ', $commentParts);
 
-        // Add the comment to the order
         $order = $this->loadOrder($orderId);
         $order->addCommentToStatusHistory($newComment);
         $this->orderRepository->save($order);

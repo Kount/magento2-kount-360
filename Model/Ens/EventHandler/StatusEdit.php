@@ -6,6 +6,7 @@
 namespace Kount\Kount360\Model\Ens\EventHandler;
 
 use Kount\Kount360\Model\Ens\EventHandlerInterface;
+use Kount\Kount360\Model\Lib\PayloadSanitizer;
 use Kount\Kount360\Model\RisService;
 use Kount\Kount360\Model\Order\ActionFactory as OrderActionFactory;
 
@@ -20,6 +21,7 @@ class StatusEdit extends EventHandlerOrder implements EventHandlerInterface
      * @param \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder
      * @param \Kount\Kount360\Model\Logger $logger
      * @param \Kount\Kount360\Model\RisService $risService
+     * @param \Kount\Kount360\Model\Lib\PayloadSanitizer $payloadSanitizer
      */
     public function __construct(
         protected \Kount\Kount360\Model\Order\ActionFactory $orderActionFactory,
@@ -27,9 +29,10 @@ class StatusEdit extends EventHandlerOrder implements EventHandlerInterface
         protected \Magento\Sales\Api\OrderRepositoryInterface $orderRepository,
         protected \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder,
         protected \Kount\Kount360\Model\Logger $logger,
-        protected RisService $risService
+        protected RisService $risService,
+        PayloadSanitizer $payloadSanitizer
     ) {
-        parent::__construct($orderRepository, $searchCriteriaBuilder);
+        parent::__construct($orderRepository, $searchCriteriaBuilder, $payloadSanitizer);
     }
 
     /**
@@ -38,10 +41,10 @@ class StatusEdit extends EventHandlerOrder implements EventHandlerInterface
      */
     public function process($event): void
     {
-        $orderId = $event['merchantOrderId'];
-        $transactionId  = $event['kountOrderId'];
-        $oldValue = $event['oldValue'];
-        $newValue = $event['newValue'];
+        $orderId = $this->getEventField($event, 'merchantOrderId');
+        $transactionId = $this->getEventField($event, 'kountOrderId');
+        $oldValue = $this->getEventFieldFlattened($event, 'oldValue');
+        $newValue = $this->getEventFieldFlattened($event, 'newValue');
         $this->logger->info('ENS Event Details');
         $this->logger->info('Name: ' . self::EVENT_NAME);
         $this->logger->info('order_number: ' . $orderId);
@@ -136,7 +139,9 @@ class StatusEdit extends EventHandlerOrder implements EventHandlerInterface
     protected function updateRisResponse($order, $ris, $status): void
     {
         $ris->setResponse($status);
-        $order->addStatusHistoryComment(__('Kount ENS Notification: Modify status of an order by agent to ' . $status));
+        $order->addStatusHistoryComment(
+            __('Kount ENS Notification: Modify status of an order by agent to %1', $status)
+        );
         $this->orderRepository->save($order);
     }
 

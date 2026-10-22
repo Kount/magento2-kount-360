@@ -21,12 +21,12 @@ class Log extends Field
     protected function _getElementHtml(AbstractElement $element): string
     {
         $dir = $this->_filesystem->getDirectoryWrite(DirectoryList::VAR_DIR);
+        $htmlId = $this->escapeHtmlAttr($element->getHtmlId());
         if ($dir->isFile('log/' . ConfigLog::FILENAME)) {
-            $html = '<a id="' . $element->getHtmlId() . '" href="' . $this->getUrl('kount360/config/log') . '">' . __(
-                    'Download'
-                ) . '</a>';
+            $html = '<a id="' . $htmlId . '" href="' . $this->escapeUrl($this->getUrl('kount360/config/log')) . '">'
+                . $this->escapeHtml(__('Download')) . '</a>';
         } else {
-            $html = '<span id="' . $element->getHtmlId() . '">' . __('File is not generated yet.') . '</a>';
+            $html = '<span id="' . $htmlId . '">' . $this->escapeHtml(__('File is not generated yet.')) . '</span>';
         }
         return $html;
     }

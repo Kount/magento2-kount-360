@@ -28,10 +28,16 @@ class EventHandlerFactory
      */
     public function create($handlerCode)
     {
-        if (empty($this->handlers[$handlerCode])) {
-            throw new \InvalidArgumentException("Handler for {$handlerCode} ENS event isn't configured.");
+        if (!is_string($handlerCode) || !isset($this->handlers[$handlerCode])) {
+            throw new \InvalidArgumentException('Handler for the requested ENS event isn\'t configured.');
         }
 
-        return $this->handlers[$handlerCode];
+        $handler = $this->handlers[$handlerCode];
+
+        if (!$handler instanceof EventHandlerInterface) {
+            throw new \InvalidArgumentException("Configured ENS handler for {$handlerCode} is not a valid handler.");
+        }
+
+        return $handler;
     }
 }

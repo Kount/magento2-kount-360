@@ -38,13 +38,15 @@ class Manager
      * @param \Kount\Kount360\Helper\Data $helperData
      * @param \Kount\Kount360\Model\Logger $logger
      * @param array $supportedEvents
+     * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      */
     public function __construct(
         \Kount\Kount360\Model\Config\Account $configAccount,
         \Kount\Kount360\Model\Ens\EventHandlerFactory $eventHandlerFactory,
         \Kount\Kount360\Helper\Data $helperData,
         \Kount\Kount360\Model\Logger $logger,
-        array $supportedEvents
+        array $supportedEvents,
+        protected \Magento\Store\Model\StoreManagerInterface $storeManager
     ) {
         $this->configAccount = $configAccount;
         $this->eventHandlerFactory = $eventHandlerFactory;
@@ -53,13 +55,31 @@ class Manager
         $this->supportedEvents = $supportedEvents;
     }
 
+    /**
+     * @return string|null
+     */
+    protected function resolveWebsiteCode(): ?string
+    {
+        try {
+            return $this->storeManager->getWebsite()->getCode();
+        } catch (\Exception $e) {
+            $this->logger->info('Unable to resolve website scope for ENS request, falling back to default scope.');
+            return null;
+        }
+    }
+
     public function handleRequest($jsonData)
     {
         if (!is_array($jsonData)) {
             throw new \InvalidArgumentException('Invalid JSON request.');
         }
 
-        if (!isset($jsonData['clientId']) || $jsonData['clientId'] != $this->configAccount->getClientId()) {
+        if (!isset($jsonData['clientId']) || !is_scalar($jsonData['clientId'])) {
+            throw new \InvalidArgumentException('Invalid Merchant Id in event JSON.');
+        }
+
+        $configuredClientId = (string)$this->configAccount->getClientId($this->resolveWebsiteCode());
+        if ($configuredClientId === '' || (string)$jsonData['clientId'] !== $configuredClientId) {
             throw new \InvalidArgumentException('Invalid Merchant Id in event JSON.');
         }
 

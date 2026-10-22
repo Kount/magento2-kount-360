@@ -11,10 +11,11 @@ class Session extends \Magento\Framework\Session\SessionManager
 
     /**
      * @return $this
+     * @throws \Exception
      */
     public function incrementKountSessionId()
     {
-        $kountSessionId = substr(hash('sha512', rand(0, 100000) . '-' . microtime()), 0, 32);
+        $kountSessionId = bin2hex(random_bytes(16));
         $this->storage->setData(self::KOUNT_SESSION_ID, $kountSessionId);
 
         return $this;

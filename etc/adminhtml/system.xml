@@ -185,6 +185,16 @@
                     </depends>
                 </field>
 
+                <field id="ris_metrics_enabled" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Log Full Request / Response Bodies</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Verbose troubleshooting logging. Adds the request and response bodies, the ENS payload, and the extended RIS metrics to the Kount log. Credentials, card data and shopper names are masked, but email, IP and postal address remain readable, so enable only while investigating an issue and switch it off afterwards.]]></comment>
+                    <depends>
+                        <field id="kount360/account/enabled">1</field>
+                        <field id="enabled">1</field>
+                    </depends>
+                </field>
+
                 <field id="download" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="0">
                     <label>Log File</label>
                     <frontend_model>Kount\Kount360\Block\Adminhtml\System\Config\Log</frontend_model>
