@@ -38,7 +38,7 @@ class Manager
      * @param \Kount\Kount360\Helper\Data $helperData
      * @param \Kount\Kount360\Model\Logger $logger
      * @param array $supportedEvents
-     * @param \Magento\Store\Model\StoreManagerInterface|null $storeManager
+     * @param \Magento\Store\Model\StoreManagerInterface $storeManager
      */
     public function __construct(
         \Kount\Kount360\Model\Config\Account $configAccount,
@@ -46,7 +46,7 @@ class Manager
         \Kount\Kount360\Helper\Data $helperData,
         \Kount\Kount360\Model\Logger $logger,
         array $supportedEvents,
-        protected ?\Magento\Store\Model\StoreManagerInterface $storeManager = null
+        protected \Magento\Store\Model\StoreManagerInterface $storeManager
     ) {
         $this->configAccount = $configAccount;
         $this->eventHandlerFactory = $eventHandlerFactory;
@@ -60,10 +60,6 @@ class Manager
      */
     protected function resolveWebsiteCode(): ?string
     {
-        if ($this->storeManager === null) {
-            return null;
-        }
-
         try {
             return $this->storeManager->getWebsite()->getCode();
         } catch (\Exception $e) {

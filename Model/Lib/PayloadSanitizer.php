@@ -29,32 +29,29 @@ class PayloadSanitizer
     ];
 
     /**
+     * Keys whose values are masked. Email, IP and postal address are deliberately absent:
+     * they are the fields support needs to match a Kount order back to a Magento order.
+     *
+     * A masked key keeps its place in the payload with `***` for a value, so the log still
+     * shows which fields were sent. A sensitive key holding an array (`name: {first, last}`)
+     * is recursed into, which is why the inner `first` / `last` keys are listed here too.
+     *
      * @var string[]
      */
     private const SENSITIVE_KEYS = [
-        'email',
-        'emailaddress',
         'phone',
         'phonenumber',
         'telephone',
-        'ip',
-        'ipaddress',
-        'address',
-        'addressline1',
-        'addressline2',
-        'line1',
-        'line2',
-        'street',
-        'postalcode',
-        'postcode',
-        'zip',
         'firstname',
         'lastname',
         'name',
+        'first',
+        'last',
         'cardnumber',
         'bin',
         'last4',
         'token',
+        'paymenttoken',
         'accesstoken',
         'authorization',
         'apikey',

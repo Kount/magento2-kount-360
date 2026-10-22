@@ -31,8 +31,8 @@ class RisService
         private \Kount\Kount360\Model\Config\Account $configAccount,
         private \Magento\Framework\Serialize\Serializer\Json $serializerJson,
         private \Magento\Framework\App\Request\DataPersistorInterface $dataPersistor,
-        private ?\Kount\Kount360\Model\Config\Log $configLog = null,
-        private ?\Kount\Kount360\Model\Lib\PayloadSanitizer $payloadSanitizer = null
+        private \Kount\Kount360\Model\Config\Log $configLog,
+        private \Kount\Kount360\Model\Lib\PayloadSanitizer $payloadSanitizer
     ) {
 
     }
@@ -167,14 +167,10 @@ class RisService
      */
     private function logResponse(string $label, $response): void
     {
-        if ($this->configLog === null || !$this->configLog->isRisMetricsEnabled()) {
+        if (!$this->configLog->isRisMetricsEnabled()) {
             return;
         }
 
-        $payload = $this->payloadSanitizer !== null
-            ? $this->payloadSanitizer->sanitize($response)
-            : '[payload logging unavailable]';
-
-        $this->logger->info($label . ': ' . $payload);
+        $this->logger->info($label . ': ' . $this->payloadSanitizer->sanitize($response));
     }
 }

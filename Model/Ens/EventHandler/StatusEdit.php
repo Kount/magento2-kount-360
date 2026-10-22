@@ -21,7 +21,7 @@ class StatusEdit extends EventHandlerOrder implements EventHandlerInterface
      * @param \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder
      * @param \Kount\Kount360\Model\Logger $logger
      * @param \Kount\Kount360\Model\RisService $risService
-     * @param \Kount\Kount360\Model\Lib\PayloadSanitizer|null $payloadSanitizer
+     * @param \Kount\Kount360\Model\Lib\PayloadSanitizer $payloadSanitizer
      */
     public function __construct(
         protected \Kount\Kount360\Model\Order\ActionFactory $orderActionFactory,
@@ -30,7 +30,7 @@ class StatusEdit extends EventHandlerOrder implements EventHandlerInterface
         protected \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder,
         protected \Kount\Kount360\Model\Logger $logger,
         protected RisService $risService,
-        ?PayloadSanitizer $payloadSanitizer = null
+        PayloadSanitizer $payloadSanitizer
     ) {
         parent::__construct($orderRepository, $searchCriteriaBuilder, $payloadSanitizer);
     }

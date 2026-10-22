@@ -16,6 +16,7 @@ use Kount\Kount360\Model\Config\Account;
 use Kount\Kount360\Model\Config\Authorization;
 use Kount\Kount360\Model\Config\Log as ConfigLog;
 use Kount\Kount360\Model\Lib\PayloadSanitizer;
+use Psr\Http\Message\ResponseInterface;
 
 class ApiClient
 {
@@ -34,28 +35,26 @@ class ApiClient
      * @param \Kount\Kount360\Model\Config\Account $configAccount
      * @param \Kount\Kount360\Model\Logger $logger
      * @param \Kount\Kount360\Model\Config\Authorization $authorizationConfig
-     * @param \GuzzleHttp\ClientFactory|null $clientFactory
-     * @param \Kount\Kount360\Model\Lib\PayloadSanitizer|null $payloadSanitizer
-     * @param \Kount\Kount360\Model\Config\Log|null $configLog
+     * @param \Kount\Kount360\Model\Lib\PayloadSanitizer $payloadSanitizer
+     * @param \Kount\Kount360\Model\Config\Log $configLog
+     * @param \GuzzleHttp\ClientFactory $clientFactory
      * @param array $clientConfig
      */
     public function __construct(
         private Account $configAccount,
         private Logger $logger,
         private Authorization $authorizationConfig,
-        private ?ClientFactory $clientFactory = null,
-        private ?PayloadSanitizer $payloadSanitizer = null,
-        private ?ConfigLog $configLog = null,
+        private PayloadSanitizer $payloadSanitizer,
+        private ConfigLog $configLog,
+        private ClientFactory $clientFactory,
         private array $clientConfig = []
     ) {
-        $config = $this->clientConfig + [
-            'timeout' => self::DEFAULT_TIMEOUT,
-            'connect_timeout' => self::DEFAULT_CONNECT_TIMEOUT,
-        ];
-
-        $this->httpClient = $this->clientFactory !== null
-            ? $this->clientFactory->create(['config' => $config])
-            : new Client($config);
+        $this->httpClient = $this->clientFactory->create([
+            'config' => $this->clientConfig + [
+                'timeout' => self::DEFAULT_TIMEOUT,
+                'connect_timeout' => self::DEFAULT_CONNECT_TIMEOUT,
+            ],
+        ]);
     }
 
     /**
@@ -65,15 +64,32 @@ class ApiClient
      */
     private function logPayload(string $label, $payload): void
     {
-        if ($this->configLog === null || !$this->configLog->isRisMetricsEnabled()) {
+        if (!$this->configLog->isRisMetricsEnabled()) {
             return;
         }
 
-        $sanitized = $this->payloadSanitizer !== null
-            ? $this->payloadSanitizer->sanitize($payload)
-            : '[payload logging unavailable]';
+        $this->logger->info($label . ': ' . $this->payloadSanitizer->sanitize($payload));
+    }
 
-        $this->logger->info($label . ': ' . $sanitized);
+    /**
+     * Key-based masking only reaches an array, so an error body has to be decoded before it
+     * is handed to the sanitizer. A body that is not JSON is passed through as a string and
+     * is still neutralized and capped.
+     *
+     * @param string $label
+     * @param \Psr\Http\Message\ResponseInterface $response
+     * @return void
+     */
+    private function logResponseBody(string $label, ResponseInterface $response): void
+    {
+        if (!$this->configLog->isRisMetricsEnabled()) {
+            return;
+        }
+
+        $body = $response->getBody()->getContents();
+        $decoded = json_decode($body, true);
+
+        $this->logPayload($label, is_array($decoded) ? $decoded : $body);
     }
 
     /**
@@ -172,7 +188,7 @@ class ApiClient
             }
             if ($e->hasResponse()) {
                 $this->logPayload('Kount 360 Full Request', $body);
-                $this->logPayload('Kount 360 Full Response', $e->getResponse()->getBody()->getContents());
+                $this->logResponseBody('Kount 360 Full Response', $e->getResponse());
             } else {
                 $this->logger->error('Kount 360 Error: No response received from the server.');
             }
@@ -216,7 +232,7 @@ class ApiClient
                 return $this->patch($action, $url, $body);
             }
             if ($e->hasResponse()) {
-                $this->logPayload('Kount 360 Full Response', $e->getResponse()->getBody()->getContents());
+                $this->logResponseBody('Kount 360 Full Response', $e->getResponse());
             } else {
                 $this->logger->error('Kount 360 Error: No response received from the server.');
             }
@@ -232,7 +248,7 @@ class ApiClient
             }
             if ($this->hasResponse($e)) {
                 $this->logPayload('Kount 360 Full Request', $body);
-                $this->logPayload('Kount 360 Full Response', $e->getResponse()->getBody()->getContents());
+                $this->logResponseBody('Kount 360 Full Response', $e->getResponse());
             } else {
                 $this->logger->error('Kount 360 Error: No response received from the server.');
             }

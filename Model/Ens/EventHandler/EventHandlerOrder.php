@@ -20,14 +20,13 @@ class EventHandlerOrder
     /**
      * @param \Magento\Sales\Api\OrderRepositoryInterface $orderRepository
      * @param \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder
-     * @param \Kount\Kount360\Model\Lib\PayloadSanitizer|null $payloadSanitizer
+     * @param \Kount\Kount360\Model\Lib\PayloadSanitizer $payloadSanitizer
      */
     public function __construct(
         protected \Magento\Sales\Api\OrderRepositoryInterface $orderRepository,
         protected \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder,
-        protected ?PayloadSanitizer $payloadSanitizer = null
+        protected PayloadSanitizer $payloadSanitizer
     ) {
-        $this->payloadSanitizer = $payloadSanitizer ?? new PayloadSanitizer();
     }
 
     /**

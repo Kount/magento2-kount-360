@@ -16,13 +16,13 @@ class NotesAdd extends EventHandlerOrder implements EventHandlerInterface
      * @param \Kount\Kount360\Model\Logger $logger
      * @param \Magento\Sales\Api\OrderRepositoryInterface $orderRepository
      * @param \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder
-     * @param \Kount\Kount360\Model\Lib\PayloadSanitizer|null $payloadSanitizer
+     * @param \Kount\Kount360\Model\Lib\PayloadSanitizer $payloadSanitizer
      */
     public function __construct(
         protected \Kount\Kount360\Model\Logger $logger,
         protected \Magento\Sales\Api\OrderRepositoryInterface $orderRepository,
         protected \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder,
-        ?PayloadSanitizer $payloadSanitizer = null
+        PayloadSanitizer $payloadSanitizer
     ) {
         parent::__construct($orderRepository, $searchCriteriaBuilder, $payloadSanitizer);
     }

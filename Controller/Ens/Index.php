@@ -17,8 +17,6 @@ use Magento\Framework\Exception\LocalizedException;
 
 class Index extends Action implements \Magento\Framework\App\CsrfAwareActionInterface, HttpPostActionInterface
 {
-    const MAX_LOGGED_PAYLOAD_LENGTH = 8192;
-
     public function __construct(
         protected \Magento\Framework\App\Action\Context $context,
         protected \Kount\Kount360\Model\Config\Account $configAccount,
@@ -27,9 +25,8 @@ class Index extends Action implements \Magento\Framework\App\CsrfAwareActionInte
         protected \Magento\Framework\HTTP\PhpEnvironment\RemoteAddress $remoteAddress,
         protected \Kount\Kount360\Model\Logger $logger,
         protected \Kount\Kount360\Model\Config\Log $configLog,
-        protected ?PayloadSanitizer $payloadSanitizer = null
+        protected PayloadSanitizer $payloadSanitizer
     ) {
-        $this->payloadSanitizer = $payloadSanitizer ?? new PayloadSanitizer();
         parent::__construct($context);
     }
 

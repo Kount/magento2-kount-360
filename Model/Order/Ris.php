@@ -21,6 +21,7 @@ class Ris
      * @param \Kount\Kount360\Api\RisRepositoryInterface $risRepository
      * @param \Kount\Kount360\Model\Logger $logger
      * @param \Magento\Framework\App\ResourceConnection $resource
+     * @param \Kount\Kount360\Model\Config\Log $configLog
      */
     public function __construct(
         protected \Kount\Kount360\Api\Data\RisInterfaceFactory $risFactory,
@@ -28,7 +29,7 @@ class Ris
         protected \Kount\Kount360\Api\RisRepositoryInterface $risRepository,
         protected \Kount\Kount360\Model\Logger $logger,
         protected \Magento\Framework\App\ResourceConnection $resource,
-        protected ?\Kount\Kount360\Model\Config\Log $configLog = null
+        protected \Kount\Kount360\Model\Config\Log $configLog
     ) {
     }
 
@@ -154,7 +155,7 @@ class Ris
         $this->logger->info('TransactionId: ' . $ris->getTransactionId());
         $this->logger->info('Omniscore: ' . $ris->getOmniscore());
 
-        if ($this->configLog === null || !$this->configLog->isRisMetricsEnabled()) {
+        if (!$this->configLog->isRisMetricsEnabled()) {
             return;
         }
 

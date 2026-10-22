@@ -31,10 +31,6 @@
         "magento/framework": "^102.0.0|^103.0.0",
         "magento/module-sales-rule": "^100.0.0|^101.0.0|^102.0.0|^103.0.0"
     },
-    "require-dev": {
-        "magento/magento-coding-standard": "^32.0",
-        "phpunit/phpunit": "^10.5"
-    },
     "autoload": {
         "files": [
             "registration.php"

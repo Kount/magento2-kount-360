@@ -19,9 +19,9 @@ class Authorization
         private \Magento\Framework\App\Cache\TypeListInterface $cacheTypeList,
         private \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
         private \Kount\Kount360\Model\Config\Account $configAccount,
-        private ?\Magento\Framework\Encryption\EncryptorInterface $encryptor = null,
-        private ?\Magento\Store\Model\StoreManagerInterface $storeManager = null,
-        private ?\Kount\Kount360\Model\Logger $logger = null
+        private \Magento\Framework\Encryption\EncryptorInterface $encryptor,
+        private \Magento\Store\Model\StoreManagerInterface $storeManager,
+        private \Kount\Kount360\Model\Logger $logger
     ) {
     }
 
@@ -36,10 +36,6 @@ class Authorization
             return null;
         }
 
-        if ($this->encryptor === null) {
-            return (string)$stored;
-        }
-
         try {
             $decrypted = $this->encryptor->decrypt((string)$stored);
         } catch (\Exception $e) {
@@ -47,7 +43,7 @@ class Authorization
         }
 
         if (!$this->isPlausibleToken($decrypted)) {
-            $this->logger?->info('Stored Kount access token is unusable; re-authenticating.');
+            $this->logger->info('Stored Kount access token is unusable; re-authenticating.');
             return null;
         }
 
@@ -90,7 +86,7 @@ class Authorization
      */
     private function setOauthData($data): void
     {
-        $value = $this->encryptor !== null ? $this->encryptor->encrypt((string)$data) : $data;
+        $value = $this->encryptor->encrypt((string)$data);
 
         [$scope, $scopeId] = $this->resolveWriteScope();
 
@@ -112,13 +108,14 @@ class Authorization
      */
     private function resolveWriteScope(): array
     {
-        if ($this->storeManager === null) {
-            return [ScopeConfigInterface::SCOPE_TYPE_DEFAULT, 0];
-        }
-
         try {
             return [ScopeInterface::SCOPE_WEBSITES, (int)$this->storeManager->getWebsite()->getId()];
         } catch (\Exception $e) {
+            $this->logger->info(
+                'Unable to resolve website scope for the Kount access token, saving at default scope: '
+                . $e->getMessage()
+            );
+
             return [ScopeConfigInterface::SCOPE_TYPE_DEFAULT, 0];
         }
     }

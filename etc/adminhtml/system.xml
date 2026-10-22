@@ -188,7 +188,7 @@
                 <field id="ris_metrics_enabled" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Log Full Request / Response Bodies</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <comment><![CDATA[Verbose troubleshooting logging. Request and response bodies contain order PII and are written to a log file that can be downloaded from this page, so enable only while investigating an issue and switch it off afterwards.]]></comment>
+                    <comment><![CDATA[Verbose troubleshooting logging. Adds the request and response bodies, the ENS payload, and the extended RIS metrics to the Kount log. Credentials, card data and shopper names are masked, but email, IP and postal address remain readable, so enable only while investigating an issue and switch it off afterwards.]]></comment>
                     <depends>
                         <field id="kount360/account/enabled">1</field>
                         <field id="enabled">1</field>
